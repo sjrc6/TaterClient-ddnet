@@ -2418,6 +2418,8 @@ if(CLIENT)
     components/tclient/skinprofiles.h
     components/tclient/tater.cpp
     components/tclient/tater.h
+    components/tclient/translate.cpp
+    components/tclient/translate.h
     components/tclient/verify.cpp
     components/tclient/verify.h
     components/tclient/warlist.cpp

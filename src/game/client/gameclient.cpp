@@ -145,6 +145,7 @@ void CGameClient::OnConsoleInit()
 					      &m_PlayerIndicator,
 					      &m_Verify,
 					      &m_Tater,
+					      &m_Translate,
 					      &m_Hud,
 					      &m_Spectator,
 					      &m_Emoticon,

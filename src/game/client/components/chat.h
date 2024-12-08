@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include "base/system.h"
 #include <vector>
 
 #include <engine/console.h>
@@ -41,6 +42,7 @@ class CChat : public CComponent
 		char m_aText[MAX_LINE_LENGTH];
 		bool m_Friend;
 		bool m_Highlighted;
+		bool m_Translated = false;
 		std::optional<ColorRGBA> m_CustomColor;
 
 		STextContainerIndex m_TextContainerIndex;
@@ -144,6 +146,8 @@ class CChat : public CComponent
 
 	bool LineShouldHighlight(const char *pLine, const char *pName);
 	void StoreSave(const char *pText);
+
+	friend class CTranslate;
 
 public:
 	CChat();
