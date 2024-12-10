@@ -424,6 +424,14 @@ public:
 		CCharacterCore m_Predicted;
 		CCharacterCore m_PrevPredicted;
 
+		//TClient
+		vec2 m_ImprovedPredPos = vec2(0, 0);
+		vec2 m_PrevImprovedPredPos = vec2(0, 0);
+		vec2 m_ConfidencePos = vec2(0, 0);
+
+		float m_Uncertainty = 0.0f;
+		float m_UncertaintySmoothing = 0;
+
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 

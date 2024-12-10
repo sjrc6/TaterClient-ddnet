@@ -2441,7 +2441,11 @@ void CGameClient::OnPredict()
 	}
 
 	// detect mispredictions of other players and make corrections smoother when possible
-	if(g_Config.m_ClAntiPingSmooth && Predict() && AntiPingPlayers() && m_NewTick && m_PredictedTick >= MIN_TICK && absolute(m_PredictedTick - Client()->PredGameTick(g_Config.m_ClDummy)) <= 1 && absolute(Client()->GameTick(g_Config.m_ClDummy) - Client()->PrevGameTick(g_Config.m_ClDummy)) <= 2)
+	if(g_Config.m_ClAntiPingSmooth && 
+		Predict() && AntiPingPlayers() && 
+		m_NewTick && m_PredictedTick >= MIN_TICK &&
+		absolute(m_PredictedTick - Client()->PredGameTick(g_Config.m_ClDummy)) <= 1 &&
+		absolute(Client()->GameTick(g_Config.m_ClDummy) - Client()->PrevGameTick(g_Config.m_ClDummy)) <= 2)
 	{
 		int PredTime = clamp(Client()->GetPredictionTime(), 0, 800);
 		float SmoothPace = 4 - 1.5f * PredTime / 800.f; // smoothing pace (a lower value will make the smoothing quicker)
@@ -2497,12 +2501,85 @@ void CGameClient::OnPredict()
 		}
 	}
 
+	// TClient
+	// New antiping smoothing
+	if(g_Config.m_ClAntiPingImproved &&
+		Predict() && AntiPingPlayers() &&
+		m_NewPredictedTick && m_PredictedTick >= MIN_TICK) // using m_NewPredictedTick instead of m_NewTick because it seems more correct?
+	{
+		int PredTime = clamp(Client()->GetPredictionTime(), 0, 8000); //Milliseconds for some reason?? TODO: Use more precision
+
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!m_Snap.m_aCharacters[i].m_Active || i == m_Snap.m_LocalClientId || !m_aLastActive[i])
+				continue;
+
+			vec2 PredPos = m_aClients[i].m_Predicted.m_Pos;
+			vec2 PrevPredPos = m_aLastPos[i]; // TODO: This position is not accurate because it should account for predicted inputs that happened on this tick
+			vec2 ServerPos = vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y);
+			vec2 PredDir = normalize(PredPos - ServerPos);
+			vec2 LastDir = normalize(PrevPredPos - ServerPos);
+
+			float Confidence = 1.0f;
+			if(LastDir == vec2(0, 0))
+				Confidence = 1.0f;
+			else if(PredDir == vec2(0, 0))
+				Confidence = 1.0f; // TODO?: this should maybe cause uncertainty smoothing
+			else 
+			{
+				Confidence = dot(LastDir, PredDir) * 0.5 + 0.5;
+				//Confidence = std::pow(Confidence, 2.0f);
+			}
+
+
+			float TickSize = (float)(1000 / Client()->GameTickSpeed()) / ((float)PredTime * 2.0f); // 20ms / PredTime
+			float PrevConfidence = 1.0f - m_aClients[i].m_Uncertainty;
+
+			float AdditionalUncertainty = PrevConfidence - std::min(Confidence, PrevConfidence);
+
+			float Smoothing = AdditionalUncertainty * 0.5f; // 0.5 factor can be lowered
+			m_aClients[i].m_UncertaintySmoothing = std::min(1.0f, m_aClients[i].m_UncertaintySmoothing + Smoothing);
+
+			float NewConfidence = std::min(Confidence, PrevConfidence + TickSize);
+			m_aClients[i].m_Uncertainty = 1.0f - NewConfidence;
+
+			vec2 ConfidencePos = mix(ServerPos, PredPos, NewConfidence);
+			vec2 PrevImprovedPos = m_aClients[i].m_ImprovedPredPos;
+
+			// If Smoothing > 0 we mix between the PrevImprovedPos and the ConfidencePos based on the % size of the smoothing decay
+			float SmoothingMix = 1.0f;
+			if(m_aClients[i].m_UncertaintySmoothing > 0.0f)
+			{
+				SmoothingMix = 1.0f - (std::max(0.0f, m_aClients[i].m_UncertaintySmoothing - TickSize) / m_aClients[i].m_UncertaintySmoothing);
+				SmoothingMix = std::clamp(SmoothingMix, 0.0f, 1.0f);
+
+				// Decay smoothing
+				m_aClients[i].m_UncertaintySmoothing = std::max(0.0f, m_aClients[i].m_UncertaintySmoothing - TickSize);
+			}
+			vec2 SmoothingPos = mix(ServerPos, PredPos, NewConfidence);
+
+			m_aClients[i].m_PrevImprovedPredPos = PrevImprovedPos;
+			m_aClients[i].m_ImprovedPredPos = SmoothingPos;
+
+
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "CalcY: %.2f ServerY: %.2f, PredY: %.2f", m_aClients[i].m_ImprovedPredPos.y, ServerPos.y, PredPos.y);
+			str_format(aBuf, sizeof(aBuf), "Smoothing: %.2f Confidence: %.2f", m_aClients[i].m_UncertaintySmoothing, NewConfidence);
+
+			Echo(aBuf);
+			//m_aClients[i].m_ImprovedPredPos = m_aClients[i].m_Predicted.m_Pos;
+			//m_aClients[i].m_PrevImprovedPredPos = m_aLastPos[i];
+		}
+	}
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_Snap.m_aCharacters[i].m_Active)
 		{
-			m_aLastPos[i] = m_aClients[i].m_Predicted.m_Pos;
-			m_aLastActive[i] = true;
+			if(m_NewPredictedTick)
+			{
+				m_aLastPos[i] = m_aClients[i].m_Predicted.m_Pos;
+				m_aLastActive[i] = true;
+			}
 		}
 		else
 			m_aLastActive[i] = false;
@@ -3217,6 +3294,7 @@ void CGameClient::UpdateRenderedCharacters()
 				vec2(m_aClients[i].m_RenderCur.m_X, m_aClients[i].m_RenderCur.m_Y),
 				m_aClients[i].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy));
 
+
 			if(g_Config.m_ClRemoveAnti)
 				Pos = GetFreezePos(i);
 			
@@ -3238,6 +3316,9 @@ void CGameClient::UpdateRenderedCharacters()
 
 				if(g_Config.m_ClAntiPingSmooth)
 					Pos = GetSmoothPos(i);
+
+				if(g_Config.m_ClAntiPingImproved)
+					Pos = mix(m_aClients[i].m_PrevImprovedPredPos, m_aClients[i].m_ImprovedPredPos, Client()->PredIntraGameTick(g_Config.m_ClDummy));
 
 				if(g_Config.m_ClRemoveAnti && g_Config.m_ClAmIFrozen)
 					Pos = GetFreezePos(i);
