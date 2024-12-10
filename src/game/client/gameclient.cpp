@@ -2503,73 +2503,106 @@ void CGameClient::OnPredict()
 
 	// TClient
 	// New antiping smoothing
+	CCharacter *pSmoothLocalChar = m_PredSmoothingWorld.GetCharacterById(m_Snap.m_LocalClientId);
+	if(!pSmoothLocalChar)
+		m_PredSmoothingWorld.CopyWorld(&m_PredictedWorld);
 	if(g_Config.m_ClAntiPingImproved &&
 		Predict() && AntiPingPlayers() &&
+		pSmoothLocalChar &&
 		m_NewPredictedTick && m_PredictedTick >= MIN_TICK) // using m_NewPredictedTick instead of m_NewTick because it seems more correct?
 	{
 		int PredTime = clamp(Client()->GetPredictionTime(), 0, 8000); //Milliseconds for some reason?? TODO: Use more precision
+
+
+		// Nightmare: in order to get 100% accurate comparison to the previous prediction state we must 
+		// tick the previous predicted world with our current predicted inputs
+		if(!pSmoothLocalChar)
+		{
+			Echo("AAA THIS IS BAD");
+			return;
+		}
+		CCharacter *pSmoothDummyChar = 0;
+		CCharacter *pPredDummyChar = 0;
+		if(PredictDummy())
+		{
+			pSmoothDummyChar = m_PredSmoothingWorld.GetCharacterById(m_PredictedDummyId);
+			pPredDummyChar = m_PredictedWorld.GetCharacterById(m_PredictedDummyId);
+		}
+		CNetObj_PlayerInput *pInputData = &m_PredictedWorld.GetCharacterById(m_Snap.m_LocalClientId)->LatestInput();
+		CNetObj_PlayerInput *pDummyInputData = !pPredDummyChar ? 0 : &m_PredictedWorld.GetCharacterById(m_PredictedDummyId)->LatestInput();
+		bool DummyFirst = pInputData && pDummyInputData && pSmoothDummyChar->GetCid() < pSmoothLocalChar->GetCid();
+		if(DummyFirst)
+			pSmoothDummyChar->OnDirectInput(pDummyInputData);
+		if(pInputData)
+			pSmoothLocalChar->OnDirectInput(pInputData);
+		if(pDummyInputData && !DummyFirst)
+			pSmoothDummyChar->OnDirectInput(pDummyInputData);
+		m_PredSmoothingWorld.m_GameTick++;
+		if(pInputData)
+			pSmoothLocalChar->OnPredictedInput(pInputData);
+		if(pDummyInputData)
+			pSmoothDummyChar->OnPredictedInput(pDummyInputData);
+		m_PredSmoothingWorld.Tick();
 
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(!m_Snap.m_aCharacters[i].m_Active || i == m_Snap.m_LocalClientId || !m_aLastActive[i])
 				continue;
 
+			CCharacter *pChar = m_PredSmoothingWorld.GetCharacterById(i);
+			if(!pChar)
+				continue;
+
 			vec2 PredPos = m_aClients[i].m_Predicted.m_Pos;
-			vec2 PrevPredPos = m_aLastPos[i]; // TODO: This position is not accurate because it should account for predicted inputs that happened on this tick
+			if(g_Config.m_ClFastInputOthers && g_Config.m_ClFastInput)
+				PredPos = m_aClients[i].m_PrevPredicted.m_Pos;
+
+			vec2 PrevPredPos = pChar->GetCore().m_Pos; // TODO: This position is not entirely accurate because it should account for predicted inputs that happened on this tick
 			vec2 ServerPos = vec2(m_Snap.m_aCharacters[i].m_Cur.m_X, m_Snap.m_aCharacters[i].m_Cur.m_Y);
 			vec2 PredDir = normalize(PredPos - ServerPos);
 			vec2 LastDir = normalize(PrevPredPos - ServerPos);
+			float PredLength = length(PredPos - ServerPos);
+			float LastLength = length(PrevPredPos - ServerPos);
 
+			vec2 ConfidenceVector = m_aClients[i].m_ConfidenceVector;
 			float Confidence = 1.0f;
-			if(LastDir == vec2(0, 0))
+			if(LastDir == vec2(0, 0) && PredDir == vec2(0, 0))
 				Confidence = 1.0f;
-			else if(PredDir == vec2(0, 0))
-				Confidence = 1.0f; // TODO?: this should maybe cause uncertainty smoothing
 			else 
 			{
-				Confidence = dot(LastDir, PredDir) * 0.5 + 0.5;
-				//Confidence = std::pow(Confidence, 2.0f);
+				Confidence = std::max(0.0f, dot(LastDir, PredDir));
+				//Confidence = std::pow(Confidence, 5.0f);
 			}
+			vec2 MidVector = mix(LastDir, PredDir, 0.5f);
+			float MidLength = length(mix(PredPos, PrevPredPos, 0.5f) - ServerPos);
+			MidVector = normalize(MidVector) * MidLength;
+			ConfidenceVector = mix(MidVector, ConfidenceVector, Confidence);
 
-
-			float TickSize = (float)(1000 / Client()->GameTickSpeed()) / ((float)PredTime * 2.0f); // 20ms / PredTime
+			float TickSize = (float)(1000 / Client()->GameTickSpeed()) / ((float)PredTime * 1.0f); // 20ms / PredTime
 			float PrevConfidence = 1.0f - m_aClients[i].m_Uncertainty;
-
-			float AdditionalUncertainty = PrevConfidence - std::min(Confidence, PrevConfidence);
-
-			float Smoothing = AdditionalUncertainty * 0.5f; // 0.5 factor can be lowered
-			m_aClients[i].m_UncertaintySmoothing = std::min(1.0f, m_aClients[i].m_UncertaintySmoothing + Smoothing);
 
 			float NewConfidence = std::min(Confidence, PrevConfidence + TickSize);
 			m_aClients[i].m_Uncertainty = 1.0f - NewConfidence;
 
-			vec2 ConfidencePos = mix(ServerPos, PredPos, NewConfidence);
-			vec2 PrevImprovedPos = m_aClients[i].m_ImprovedPredPos;
+			vec2 ConfidencePos = mix(ServerPos + ConfidenceVector, PredPos, NewConfidence);
 
-			// If Smoothing > 0 we mix between the PrevImprovedPos and the ConfidencePos based on the % size of the smoothing decay
-			float SmoothingMix = 1.0f;
-			if(m_aClients[i].m_UncertaintySmoothing > 0.0f)
-			{
-				SmoothingMix = 1.0f - (std::max(0.0f, m_aClients[i].m_UncertaintySmoothing - TickSize) / m_aClients[i].m_UncertaintySmoothing);
-				SmoothingMix = std::clamp(SmoothingMix, 0.0f, 1.0f);
+			m_aClients[i].m_ConfidenceVector = ConfidenceVector;
 
-				// Decay smoothing
-				m_aClients[i].m_UncertaintySmoothing = std::max(0.0f, m_aClients[i].m_UncertaintySmoothing - TickSize);
-			}
-			vec2 SmoothingPos = mix(ServerPos, PredPos, NewConfidence);
-
-			m_aClients[i].m_PrevImprovedPredPos = PrevImprovedPos;
-			m_aClients[i].m_ImprovedPredPos = SmoothingPos;
+			m_aClients[i].m_PrevImprovedPredPos = m_aClients[i].m_ImprovedPredPos;
+			m_aClients[i].m_ImprovedPredPos = PredPos;
 
 
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "CalcY: %.2f ServerY: %.2f, PredY: %.2f", m_aClients[i].m_ImprovedPredPos.y, ServerPos.y, PredPos.y);
-			str_format(aBuf, sizeof(aBuf), "Smoothing: %.2f Confidence: %.2f", m_aClients[i].m_UncertaintySmoothing, NewConfidence);
+			str_format(aBuf, sizeof(aBuf), "Confidence: %.2f, CurrentConfidence: %.2f", NewConfidence, Confidence);
+			str_format(aBuf, sizeof(aBuf), "Confidence: %.2f", Confidence);
 
 			Echo(aBuf);
 			//m_aClients[i].m_ImprovedPredPos = m_aClients[i].m_Predicted.m_Pos;
 			//m_aClients[i].m_PrevImprovedPredPos = m_aLastPos[i];
 		}
+		// Copy the current pred world so on the next tick we have the "previous" pred work to advance and test against
+		m_PredSmoothingWorld.CopyWorld(&m_PredictedWorld);
 	}
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{

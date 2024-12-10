@@ -427,7 +427,7 @@ public:
 		//TClient
 		vec2 m_ImprovedPredPos = vec2(0, 0);
 		vec2 m_PrevImprovedPredPos = vec2(0, 0);
-		vec2 m_ConfidencePos = vec2(0, 0);
+		vec2 m_ConfidenceVector = vec2(0, 0);
 
 		float m_Uncertainty = 0.0f;
 		float m_UncertaintySmoothing = 0;
@@ -625,7 +625,9 @@ public:
 	CGameWorld m_GameWorld;
 	CGameWorld m_PredictedWorld;
 	CGameWorld m_PrevPredictedWorld;
+	//TClient
 	CGameWorld m_ExtraPredictedWorld;
+	CGameWorld m_PredSmoothingWorld;
 
 	std::vector<SSwitchers> &Switchers() { return m_GameWorld.m_Core.m_vSwitchers; }
 	std::vector<SSwitchers> &PredSwitchers() { return m_PredictedWorld.m_Core.m_vSwitchers; }
