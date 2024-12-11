@@ -197,8 +197,8 @@ void CPlayers::RenderHookCollLine(
 		const int MaxDistance = g_Config.m_ClDyncam ? g_Config.m_ClDyncamMaxDistance : g_Config.m_ClMouseMaxDistance;
 		if(MaxDistance > 5) // Only multiply mouse coords if not angle bind
 		{
-			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 1000) // Don't scale if it would reduce precision
-				Pos *= length(Pos) * 1000.0f / (float)MaxDistance;
+			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 500) // Don't scale if it would reduce precision
+				Pos *= length(Pos) * 500.0f / (float)MaxDistance;
 			if(!m_pClient->m_Snap.m_SpecInfo.m_Active && !g_Config.m_ClOldMouseZoom)
 				Pos *= m_pClient->m_Camera.m_Zoom;
 		}
@@ -480,8 +480,8 @@ void CPlayers::RenderPlayer(
 		const int MaxDistance = g_Config.m_ClDyncam ? g_Config.m_ClDyncamMaxDistance : g_Config.m_ClMouseMaxDistance;
 		if(MaxDistance > 5) // Only multiply mouse coords if not angle bind
 		{
-			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 1000) // Don't scale if it would reduce precision
-				Pos *= length(Pos) * 1000.0f / (float)MaxDistance;
+			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 500) // Don't scale if it would reduce precision
+				Pos *= length(Pos) * 500.0f / (float)MaxDistance;
 			if(!m_pClient->m_Snap.m_SpecInfo.m_Active && !g_Config.m_ClOldMouseZoom)
 				Pos *= m_pClient->m_Camera.m_Zoom;
 		}
@@ -920,8 +920,8 @@ void CPlayers::RenderPlayerGhost(
 		const int MaxDistance = g_Config.m_ClDyncam ? g_Config.m_ClDyncamMaxDistance : g_Config.m_ClMouseMaxDistance;
 		if(MaxDistance > 5) // Only multiply mouse coords if not angle bind
 		{
-			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 1000) // Don't scale if it would reduce precision
-				Pos *= length(Pos) * 1000.0f / (float)MaxDistance;
+			if(g_Config.m_ClImproveMousePrecision && MaxDistance < 500) // Don't scale if it would reduce precision
+				Pos *= length(Pos) * 500.0f / (float)MaxDistance;
 			if(!m_pClient->m_Snap.m_SpecInfo.m_Active && !g_Config.m_ClOldMouseZoom)
 				Pos *= m_pClient->m_Camera.m_Zoom;
 		}
