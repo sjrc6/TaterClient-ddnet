@@ -64,6 +64,7 @@
 #include "components/tclient/rainbow.h"
 #include "components/tclient/skinprofiles.h"
 #include "components/tclient/tater.h"
+#include "components/tclient/translate.h"
 #include "components/tclient/verify.h"
 #include "components/tclient/warlist.h"
 #include "components/touch_controls.h"
@@ -182,6 +183,7 @@ public:
 	CSkinProfiles m_SkinProfiles;
 	CBindWheel m_Bindwheel;
 	CTater m_Tater;
+	CTranslate m_Translate;
 	CPlayerIndicator m_PlayerIndicator;
 	COutlines m_Outlines;
 	CRainbow m_Rainbow;
