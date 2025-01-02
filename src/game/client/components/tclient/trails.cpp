@@ -161,11 +161,13 @@ void CTrails::OnRender()
 		for(int i = 0; i < TrimTicks; i++)
 			Trail.pop_back();
 
-		// Stuff breaks if we have less than 3 points because we cannot calculate an angle between segments to preserve constant width
-		// TODO: Pad the list with generated entries in the same direction as before
-		if((int)Trail.size() < 3)
-			continue;
 
+		//pad if trailsize < 3
+		while((int)Trail.size() < 3) {
+    	std::vector<STrailPart> TrailParts = {GenerateTrailPoint(Trail, Trail.size())};
+    	Trail.insert(Trail.begin(), TrailParts.begin(), TrailParts.end());
+		}
+		
 		Trail.at(Trail.size() - 1).Pos = mix(Trail.at(Trail.size() - 1).Pos, Trail.at(Trail.size() - 2).Pos, std::fmod(IntraTick, 1.0f));
 
 		// Set progress
@@ -332,4 +334,22 @@ void CTrails::OnRender()
 		GameClient()->m_aClients[ClientId].m_aPredPos[PredTick % 200] = SavedTempPredPos;
 		m_PositionHistory[ClientId][GameTick % 200] = CurServerPos;
 	}
+}
+
+std::vector<STrailPart> CTrails::GenerateTrailPoint(std::vector<STrailPart> &Trail, int Index) {
+    STrailPart TrailPart;
+    if (Trail.size() >= 2) {
+      vec2 Direction = normalize(Trail[1].Pos - Trail[0].Pos);
+      float Length = distance(Trail[1].Pos, Trail[0].Pos);
+
+      TrailPart.Pos = Trail[0].Pos - (Direction * Length);
+      TrailPart.Col = Trail[0].Col;
+      TrailPart.Alpha = Trail[0].Alpha;
+      TrailPart.Width = Trail[0].Width;
+      TrailPart.Progress = 0.0f;
+  } else if(Trail.size() == 1) {
+      TrailPart = Trail[0];
+      TrailPart.Pos = Trail[0].Pos - vec2(5.0f, 0.0f);
+  }
+    return std::vector<STrailPart>{TrailPart};
 }

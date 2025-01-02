@@ -30,6 +30,8 @@ public:
 	virtual void OnReset() override;
 
 private:
+//helper function to pad the trail if TrailSize < 3
+std::vector<STrailPart> GenerateTrailPoint(std::vector<STrailPart> &Trail, int Index);
 	vec2 m_PositionHistory[MAX_CLIENTS][200];
 	int m_PositionTick[MAX_CLIENTS][200];
 	bool m_HistoryValid[MAX_CLIENTS] = {};
