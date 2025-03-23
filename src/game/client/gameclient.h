@@ -66,6 +66,7 @@
 #include "components/tclient/statusbar.h"
 #include "components/tclient/tater.h"
 #include "components/tclient/trails.h"
+#include "components/tclient/translate.h"
 #include "components/tclient/verify.h"
 #include "components/tclient/warlist.h"
 #include "components/tooltips.h"
@@ -189,6 +190,7 @@ public:
 	CBindWheel m_Bindwheel;
 	CTater m_Tater;
 	CTrails m_Trails;
+	CTranslate m_Translate;
 	CPlayerIndicator m_PlayerIndicator;
 	COutlines m_Outlines;
 	CRainbow m_Rainbow;

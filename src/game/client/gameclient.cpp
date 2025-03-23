@@ -133,6 +133,7 @@ void CGameClient::OnConsoleInit()
 					      &m_Particles.m_RenderTrailExtra,
 					      &m_Items,
 					      &m_Trails,
+					      &m_Translate,
 					      &m_Ghost,
 					      &m_Players,
 					      &m_MapLayersForeground,

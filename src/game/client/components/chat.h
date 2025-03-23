@@ -53,6 +53,9 @@ class CChat : public CComponent
 		float m_TextYOffset;
 
 		int m_TimesRepeated;
+
+		std::optional<unsigned int> m_TranslateId;
+		char m_aTextTranslated[MAX_LINE_LENGTH];
 	};
 
 	bool m_PrevScoreBoardShowed;
@@ -146,6 +149,7 @@ class CChat : public CComponent
 	void StoreSave(const char *pText);
 
 	friend class CBindchat;
+	friend class CTranslate;
 
 public:
 	CChat();
