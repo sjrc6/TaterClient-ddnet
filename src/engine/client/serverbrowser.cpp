@@ -106,7 +106,7 @@ void CServerBrowser::OnInit()
 
 void CServerBrowser::RegisterCommands()
 {
-	m_pConfigManager->RegisterCallback(CServerBrowser::ConfigSaveCallback, this);
+	m_pConfigManager->RegisterCallback(CONFIGDOMAIN::DDNET, CServerBrowser::ConfigSaveCallback, this);
 	m_pConsole->Register("add_favorite_community", "s[community_id]", CFGFLAG_CLIENT, Con_AddFavoriteCommunity, this, "Add a community as a favorite");
 	m_pConsole->Register("remove_favorite_community", "s[community_id]", CFGFLAG_CLIENT, Con_RemoveFavoriteCommunity, this, "Remove a community from the favorites");
 	m_pConsole->Register("add_excluded_community", "s[community_id]", CFGFLAG_CLIENT, Con_AddExcludedCommunity, this, "Add a community to the exclusion filter");
@@ -1905,7 +1905,7 @@ void CFavoriteCommunityFilterList::Save(IConfigManager *pConfigManager) const
 		str_copy(aBuf, "add_favorite_community \"");
 		str_append(aBuf, FavoriteCommunity.Id());
 		str_append(aBuf, "\"");
-		pConfigManager->WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuf);
 	}
 }
 
@@ -1978,7 +1978,7 @@ void CExcludedCommunityFilterList::Save(IConfigManager *pConfigManager) const
 		str_copy(aBuf, "add_excluded_community \"");
 		str_append(aBuf, ExcludedCommunity.Id());
 		str_append(aBuf, "\"");
-		pConfigManager->WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuf);
 	}
 }
 
@@ -2136,7 +2136,7 @@ void CExcludedCommunityCountryFilterList::Save(IConfigManager *pConfigManager) c
 			str_append(aBuf, "\" \"");
 			str_append(aBuf, Country.Name());
 			str_append(aBuf, "\"");
-			pConfigManager->WriteLine(aBuf);
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuf);
 		}
 	}
 }
@@ -2295,7 +2295,7 @@ void CExcludedCommunityTypeFilterList::Save(IConfigManager *pConfigManager) cons
 			str_append(aBuf, "\" \"");
 			str_append(aBuf, Type.Name());
 			str_append(aBuf, "\"");
-			pConfigManager->WriteLine(aBuf);
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuf);
 		}
 	}
 }

@@ -36,7 +36,7 @@ void CFavorites::OnConfigSave(IConfigManager *pConfigManager)
 	{
 		if(Entry.m_NumAddrs > 1)
 		{
-			pConfigManager->WriteLine("begin_favorite_group");
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, "begin_favorite_group");
 		}
 		for(int i = 0; i < Entry.m_NumAddrs; i++)
 		{
@@ -68,11 +68,11 @@ void CFavorites::OnConfigSave(IConfigManager *pConfigManager)
 				// parameter.
 				str_format(aBuffer, sizeof(aBuffer), "add_favorite \"%s\" allow_ping", aAddr);
 			}
-			pConfigManager->WriteLine(aBuffer);
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuffer);
 		}
 		if(Entry.m_NumAddrs > 1)
 		{
-			pConfigManager->WriteLine("end_favorite_group");
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, "end_favorite_group");
 		}
 	}
 }

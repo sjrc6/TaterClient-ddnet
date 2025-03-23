@@ -307,7 +307,7 @@ void CBinds::SetDefaults()
 
 void CBinds::OnConsoleInit()
 {
-	ConfigManager()->RegisterCallback(ConfigSaveCallback, this);
+	ConfigManager()->RegisterCallback(CONFIGDOMAIN::DDNET, ConfigSaveCallback, this);
 
 	Console()->Register("bind", "s[key] ?r[command]", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute a command or view keybindings");
 	Console()->Register("binds", "?s[key]", CFGFLAG_CLIENT, ConBinds, this, "Print command executed by this keybinding or all binds");
@@ -475,7 +475,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
 
-	pConfigManager->WriteLine("unbindall");
+	pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, "unbindall");
 	for(int Modifier = MODIFIER_NONE; Modifier < MODIFIER_COMBINATION_COUNT; Modifier++)
 	{
 		char aModifiers[128];
@@ -496,7 +496,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 			str_escape(&pDst, pSelf->m_aapKeyBindings[Modifier][Key], pEnd);
 			str_append(pBuffer, "\"", Size);
 
-			pConfigManager->WriteLine(pBuffer);
+			pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, pBuffer);
 			free(pBuffer);
 		}
 	}

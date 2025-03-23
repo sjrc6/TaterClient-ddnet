@@ -2,8 +2,6 @@
 #define GAME_CLIENT_COMPONENTS_TCLIENT_BINDCHAT_H
 #include <game/client/component.h>
 
-#define BINDCHAT_FILE "tclient_chatbinds.cfg"
-
 class IConfigManager;
 
 enum
@@ -25,17 +23,12 @@ class CBindchat : public CComponent
 
 	void ExecuteBind(int Bind, const char *pArgs);
 
-	void WriteLine(const char *pLine);
-	class IStorage *m_pStorage = nullptr;
-	IOHANDLE m_BindchatFile = nullptr;
-
 public:
 	class CBind
 	{
 	public:
 		char m_aName[BINDCHAT_MAX_NAME];
 		char m_aCommand[BINDCHAT_MAX_CMD];
-		bool m_Default = false;
 		bool operator==(const CBind &Other) const
 		{
 			return str_comp(m_aName, Other.m_aName) == 0 && str_comp(m_aCommand, Other.m_aCommand) == 0;
@@ -50,14 +43,12 @@ public:
 	virtual void OnConsoleInit() override;
 
 	void AddBind(const char *pName, const char *pCommand);
-	void AddBindDefault(const char *pName, const char *pCommand);
 
 	void RemoveBindCommand(const char *pCommand);
 	void RemoveBind(const char *pName);
 	void RemoveBind(int Index);
 	void RemoveAllBinds();
 
-	int GetBindNoDefault(const char *pCommand);
 	int GetBind(const char *pCommand);
 	CBind *Get(int Index);
 

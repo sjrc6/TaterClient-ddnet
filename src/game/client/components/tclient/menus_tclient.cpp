@@ -241,7 +241,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 		auto DoBindchat = [&](CLineInput &LineInput, const char *pLabel, const char *pName, const char *pCommand) {
 			Column.HSplitTop(LineSize, &Button, &Column);
 			char *BindCommand;
-			int BindIndex = GameClient()->m_Bindchat.GetBindNoDefault(pCommand);
+			int BindIndex = GameClient()->m_Bindchat.GetBind(pCommand);
 			bool BindNew = BindIndex == -1;
 			static char s_aBindCommandTemp[BINDCHAT_MAX_CMD] = "";
 			if(BindNew)
@@ -1590,12 +1590,12 @@ void CMenus::RenderSettingsInfo(CUIRect MainView)
 	static CButtonContainer s_Config, s_Profiles, s_Warlist, s_Chatbinds;
 	if(DoButtonLineSize_Menu(&s_Config, TCLocalize("TClient Settings"), 0, &TClientConfig, LineSize, false, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, TCONFIG_FILE, aBuf, sizeof(aBuf));
+		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[CONFIGDOMAIN::TATER].m_aConfigPath, aBuf, sizeof(aBuf));
 		Client()->ViewFile(aBuf);
 	}
 	if(DoButtonLineSize_Menu(&s_Profiles, TCLocalize("Profiles"), 0, &ProfilesFile, LineSize, false, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, PROFILES_FILE, aBuf, sizeof(aBuf));
+		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[CONFIGDOMAIN::TATERPROFILES].m_aConfigPath, aBuf, sizeof(aBuf));
 		Client()->ViewFile(aBuf);
 	}
 	LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
@@ -1605,12 +1605,12 @@ void CMenus::RenderSettingsInfo(CUIRect MainView)
 
 	if(DoButtonLineSize_Menu(&s_Warlist, TCLocalize("Warlist"), 0, &WarlistFile, LineSize, false, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, WARLIST_FILE, aBuf, sizeof(aBuf));
+		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[CONFIGDOMAIN::TATERWARLIST].m_aConfigPath, aBuf, sizeof(aBuf));
 		Client()->ViewFile(aBuf);
 	}
 	if(DoButtonLineSize_Menu(&s_Chatbinds, TCLocalize("Chatbinds"), 0, &ChatbindsFile, LineSize, false, 0, IGraphics::CORNER_ALL, 5.0f, 0.0f, ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)))
 	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, BINDCHAT_FILE, aBuf, sizeof(aBuf));
+		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[CONFIGDOMAIN::TATERCHATBINDS].m_aConfigPath, aBuf, sizeof(aBuf));
 		Client()->ViewFile(aBuf);
 	}
 
@@ -1949,7 +1949,6 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 			DoSkin ? pSkinName : "",
 			DoName ? aName : "",
 			DoClan ? aClan : "");
-		GameClient()->m_SkinProfiles.SaveProfiles();
 	}
 	LabelRight.HSplitTop(5.0f, nullptr, &LabelRight);
 
@@ -1962,13 +1961,8 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 		LabelRight.HSplitTop(28.0f, &Button, &LabelRight);
 		static CButtonContainer s_DeleteButton;
 		if(DoButton_Menu(&s_DeleteButton, TCLocalize("Delete"), 0, &Button))
-		{
 			if(s_SelectedProfile != -1 && s_SelectedProfile < (int)GameClient()->m_SkinProfiles.m_Profiles.size())
-			{
 				GameClient()->m_SkinProfiles.m_Profiles.erase(GameClient()->m_SkinProfiles.m_Profiles.begin() + s_SelectedProfile);
-				GameClient()->m_SkinProfiles.SaveProfiles();
-			}
-		}
 		LabelRight.HSplitTop(5.0f, nullptr, &LabelRight);
 
 		LabelRight.HSplitTop(28.0f, &Button, &LabelRight);
@@ -1985,7 +1979,6 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 					DoSkin ? pSkinName : "",
 					DoName ? aName : "",
 					DoClan ? aClan : "");
-				GameClient()->m_SkinProfiles.SaveProfiles();
 			}
 		}
 	}
@@ -2106,7 +2099,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 	FileButton.VSplitLeft(130.0f, &FileButton, nullptr);
 	if(DoButton_Menu(&s_ProfilesFile, TCLocalize("Profiles file"), 0, &FileButton))
 	{
-		Storage()->GetCompletePath(IStorage::TYPE_SAVE, PROFILES_FILE, aTempBuf, sizeof(aTempBuf));
+		Storage()->GetCompletePath(IStorage::TYPE_SAVE, s_aConfigDomains[CONFIGDOMAIN::TATERPROFILES].m_aConfigPath, aTempBuf, sizeof(aTempBuf));
 		Client()->ViewFile(aTempBuf);
 	}
 }

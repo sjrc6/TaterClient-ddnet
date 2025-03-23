@@ -3060,7 +3060,7 @@ void CClient::InitInterfaces()
 	m_Updater.Init(&m_Http);
 #endif
 
-	m_pConfigManager->RegisterCallback(IFavorites::ConfigSaveCallback, m_pFavorites);
+	m_pConfigManager->RegisterCallback(CONFIGDOMAIN::DDNET, IFavorites::ConfigSaveCallback, m_pFavorites);
 	m_Friends.Init();
 	m_Foes.Init(true);
 
@@ -3432,9 +3432,19 @@ void CClient::Run()
 
 	if(!m_pConfigManager->Save())
 	{
-		char aError[128];
-		str_format(aError, sizeof(aError), Localize("Saving settings to '%s' failed"), CONFIG_FILE);
-		m_vQuittingWarnings.emplace_back(Localize("Error saving settings"), aError);
+		/*
+		char aError[128] = "";
+		for(CONFIGDOMAIN ConfigDomain = CONFIGDOMAIN::START; ConfigDomain < CONFIGDOMAIN::NUM; ++ConfigDomain)
+		{
+			if(DIDNTFAIL)
+				continue
+			if(aError[0] != '\0')
+				str_append(aError, ", ");
+			str_append(s_aConfigDomains[ConfigDomain].m_aConfigPath);
+		}
+		*/
+		// TODO
+		m_vQuittingWarnings.emplace_back(Localize("Error saving settings"));
 	}
 
 	m_Fifo.Shutdown();
@@ -4897,29 +4907,23 @@ int main(int argc, const char **argv)
 	pClient->InitInterfaces();
 
 	// execute config file
-	if(pStorage->FileExists(CONFIG_FILE, IStorage::TYPE_ALL))
+	pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
+	for(CONFIGDOMAIN ConfigDomain = CONFIGDOMAIN::START; ConfigDomain < CONFIGDOMAIN::NUM; ++ConfigDomain)
 	{
-		pConsole->SetUnknownCommandCallback(SaveUnknownCommandCallback, pClient);
-		if(!pConsole->ExecuteFile(CONFIG_FILE))
+		if(!pStorage->FileExists(s_aConfigDomains[ConfigDomain].m_aConfigPath, IStorage::TYPE_ALL))
+			continue;
+		if(!pConsole->ExecuteFile(s_aConfigDomains[ConfigDomain].m_aConfigPath))
 		{
-			const char *pError = "Failed to load config from '" CONFIG_FILE "'.";
-			log_error("client", "%s", pError);
-			pClient->ShowMessageBox("Config File Error", pError);
+			char aError[2048];
+			snprintf(aError, sizeof(aError), "Failed to load config from '%s'.", s_aConfigDomains[ConfigDomain].m_aConfigPath);
+			log_error("client", aError);
+			pClient->ShowMessageBox("Config File Error", aError);
 			PerformAllCleanup();
 			return -1;
 		}
-		pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 	}
+	pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 
-	// execute tclient config file
-	IOHANDLE File = pStorage->OpenFile(TCONFIG_FILE, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(File)
-	{
-		io_close(File);
-		pConsole->ExecuteFile(TCONFIG_FILE);
-	}
-
-	// execute autoexec file
 	if(pStorage->FileExists(AUTOEXEC_CLIENT_FILE, IStorage::TYPE_ALL))
 	{
 		pConsole->ExecuteFile(AUTOEXEC_CLIENT_FILE);

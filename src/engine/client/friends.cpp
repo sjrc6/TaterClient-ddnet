@@ -40,7 +40,7 @@ void CFriends::Init(bool Foes)
 
 	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
 	if(pConfigManager)
-		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
+		pConfigManager->RegisterCallback(CONFIGDOMAIN::DDNET, ConfigSaveCallback, this);
 
 	IConsole *pConsole = Kernel()->RequestInterface<IConsole>();
 	if(pConsole)
@@ -176,6 +176,6 @@ void CFriends::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserDat
 		str_escape(&pDst, pSelf->m_aFriends[i].m_aClan, pEnd);
 		str_append(aBuf, "\"");
 
-		pConfigManager->WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::DDNET, aBuf);
 	}
 }

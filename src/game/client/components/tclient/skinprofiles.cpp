@@ -11,24 +11,13 @@ static void EscapeParam(char *pDst, const char *pSrc, int Size)
 	str_escape(&pDst, pSrc, pDst + Size);
 }
 
-void CSkinProfiles::WriteLine(const char *pLine)
+void CSkinProfiles::OnConsoleInit()
 {
-	if(!m_ProfilesFile || io_write(m_ProfilesFile, pLine, str_length(pLine)) != static_cast<unsigned>(str_length(pLine)) || !io_write_newline(m_ProfilesFile))
-		return;
-}
+	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(CONFIGDOMAIN::TATERPROFILES, ConfigSaveCallback, this);
 
-void CSkinProfiles::OnInit()
-{
-	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	IConsole *pConsole = Kernel()->RequestInterface<IConsole>();
-	pConsole->Register("add_profile", "i[body] i[feet] i[flag] i[emote] s[skin] s[name] s[clan]", CFGFLAG_CLIENT, ConAddProfile, this, "Add a profile");
-
-	IOHANDLE File = m_pStorage->OpenFile(PROFILES_FILE, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(File)
-	{
-		io_close(File);
-		pConsole->ExecuteFile(PROFILES_FILE);
-	}
+	Console()->Register("add_profile", "i[body] i[feet] i[flag] i[emote] s[skin] s[name] s[clan]", CFGFLAG_CLIENT, ConAddProfile, this, "Add a profile");
 }
 
 void CSkinProfiles::ConAddProfile(IConsole::IResult *pResult, void *pUserData)
@@ -48,22 +37,13 @@ void CSkinProfiles::AddProfile(int BodyColor, int FeetColor, int CountryFlag, in
 	m_Profiles.push_back(profile);
 }
 
-bool CSkinProfiles::SaveProfiles()
+void CSkinProfiles::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
-	char aBufTmp[512];
-	bool Failed = false;
-	m_ProfilesFile = m_pStorage->OpenFile(PROFILES_FILE, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-
-	if(!m_ProfilesFile)
-	{
-		dbg_msg("config", "ERROR: opening %s failed", aBufTmp);
-		return false;
-	}
-
+	CSkinProfiles *pThis = (CSkinProfiles *)pUserData;
 	char aBuf[256];
 	char aBufTemp[128];
 	char aEscapeBuf[256];
-	for(auto &Profile : m_Profiles)
+	for(auto &Profile : pThis->m_Profiles)
 	{
 		str_copy(aBuf, "add_profile ", sizeof(aBuf));
 
@@ -91,21 +71,6 @@ bool CSkinProfiles::SaveProfiles()
 		str_format(aBufTemp, sizeof(aBufTemp), "\"%s\"", aEscapeBuf);
 		str_append(aBuf, aBufTemp, sizeof(aBuf));
 
-		WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::TATERPROFILES, aBuf);
 	}
-
-	if(io_sync(m_ProfilesFile) != 0)
-		Failed = true;
-
-	if(io_close(m_ProfilesFile) != 0)
-		Failed = true;
-
-	m_ProfilesFile = {};
-
-	if(Failed)
-	{
-		dbg_msg("config", "ERROR: writing to %s failed", aBufTmp);
-		return false;
-	}
-	return true;
 }

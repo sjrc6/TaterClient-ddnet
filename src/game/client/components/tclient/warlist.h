@@ -5,8 +5,6 @@
 #include <engine/shared/protocol.h>
 #include <game/client/component.h>
 
-#define WARLIST_FILE "tclient_warlist.cfg"
-
 enum
 {
 	MAX_WARLIST_TYPE_LENGTH = 16,
@@ -134,10 +132,6 @@ class CWarList : public CComponent
 	static void ConUpsertWarType(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
-
-	void WriteLine(const char *pLine);
-	class IStorage *m_pStorage = nullptr;
-	IOHANDLE m_WarlistFile = nullptr;
 
 public:
 	CWarList();

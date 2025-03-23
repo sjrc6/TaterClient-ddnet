@@ -14,11 +14,9 @@
 // include protocol for MAX_CLIENT used in config_variables
 #include <engine/shared/protocol.h>
 
-#define CONFIG_FILE "settings_ddnet.cfg"
 #define AUTOEXEC_FILE "autoexec.cfg"
 #define AUTOEXEC_CLIENT_FILE "autoexec_client.cfg"
 #define AUTOEXEC_SERVER_FILE "autoexec_server.cfg"
-#define TCONFIG_FILE "settings_tclient.cfg"
 #define MAX_CALLBACKS 64;
 
 class CConfig
@@ -33,10 +31,12 @@ public:
 #define MACRO_CONFIG_STR(Name, ScriptName, Len, Def, Flags, Desc) \
 	static constexpr const char *ms_p##Name = Def; \
 	char m_##Name[Len]; // Flawfinder: ignore
-#include "config_variables.h"
+#define SET_CONFIG_DOMAIN(ConfigDomain) ;
+#include "config_includes.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_COL
 #undef MACRO_CONFIG_STR
+#undef SET_CONFIG_DOMAIN
 };
 
 extern CConfig g_Config;
@@ -64,6 +64,7 @@ enum
 
 struct SConfigVariable
 {
+	CONFIGDOMAIN m_ConfigDomain;
 	enum EVariableType
 	{
 		VAR_INT,
@@ -199,8 +200,8 @@ class CConfigManager : public IConfigManager
 	IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 
-	IOHANDLE m_ConfigFile;
-	bool m_Failed;
+	IOHANDLE m_aConfigFile[CONFIGDOMAIN::NUM];
+	bool m_aFailed[CONFIGDOMAIN::NUM];
 
 	struct SCallback
 	{
@@ -213,8 +214,7 @@ class CConfigManager : public IConfigManager
 		{
 		}
 	};
-	std::vector<SCallback> m_vCallbacks;
-	std::vector<SCallback> m_vTCallbacks;
+	std::vector<SCallback> m_avCallbacks[CONFIGDOMAIN::NUM];
 
 	std::vector<SConfigVariable *> m_vpAllVariables;
 	std::vector<SConfigVariable *> m_vpGameVariables;
@@ -233,14 +233,12 @@ public:
 	void ResetGameSettings() override;
 	void SetReadOnly(const char *pScriptName, bool ReadOnly) override;
 	bool Save() override;
-	bool TSave() override;
 
 	CConfig *Values() override { return &g_Config; }
 
-	void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) override;
-	void RegisterTCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) override;
+	void RegisterCallback(CONFIGDOMAIN ConfigDomain, SAVECALLBACKFUNC pfnFunc, void *pUserData) override;
 
-	void WriteLine(const char *pLine) override;
+	void WriteLine(CONFIGDOMAIN ConfigDomain,const char *pLine) override;
 
 	void StoreUnknownCommand(const char *pCommand) override;
 

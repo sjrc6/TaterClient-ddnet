@@ -5,6 +5,31 @@
 
 #include "kernel.h"
 
+#define CONFIG_DOMAIN(Name, ConfigPath, HasVars) Name,
+enum CONFIGDOMAIN
+{
+#include "shared/config_domains.h"
+	NUM,
+	START = 0
+};
+#undef CONFIG_DOMAIN
+static inline CONFIGDOMAIN& operator++(CONFIGDOMAIN& domain)
+{
+	return domain = static_cast<CONFIGDOMAIN>(static_cast<int>(domain) + 1);
+}
+
+class CConfigDomain
+{
+public:
+	const char *m_aConfigPath;
+	bool m_HasVars;
+}
+#define CONFIG_DOMAIN(Name, ConfigPath, HasVars) {ConfigPath, HasVars},
+static const s_aConfigDomains[CONFIGDOMAIN::NUM] = {
+#include "shared/config_domains.h"
+};
+#undef CONFIG_DOMAIN
+
 class IConfigManager : public IInterface
 {
 	MACRO_INTERFACE("config")
@@ -17,13 +42,11 @@ public:
 	virtual void ResetGameSettings() = 0;
 	virtual void SetReadOnly(const char *pScriptName, bool ReadOnly) = 0;
 	virtual bool Save() = 0;
-	virtual bool TSave() = 0;
 	virtual class CConfig *Values() = 0;
 
-	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) = 0;
-	virtual void RegisterTCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) = 0;
+	virtual void RegisterCallback(CONFIGDOMAIN ConfigDomain, SAVECALLBACKFUNC pfnFunc, void *pUserData) = 0;
 
-	virtual void WriteLine(const char *pLine) = 0;
+	virtual void WriteLine(CONFIGDOMAIN ConfigDomain, const char *pLine) = 0;
 
 	virtual void StoreUnknownCommand(const char *pCommand) = 0;
 

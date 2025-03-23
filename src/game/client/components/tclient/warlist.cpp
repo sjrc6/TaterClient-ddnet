@@ -19,7 +19,7 @@ void CWarList::OnConsoleInit()
 {
 	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
 	if(pConfigManager)
-		pConfigManager->RegisterTCallback(ConfigSaveCallback, this);
+		pConfigManager->RegisterCallback(CONFIGDOMAIN::TATERWARLIST, ConfigSaveCallback, this);
 
 	Console()->Register("update_war_group", "i[group_index] s[name] i[color]", CFGFLAG_CLIENT, ConUpsertWarType, this, "Update or add a specific war group");
 	Console()->Register("add_war_entry", "s[group] s[name] s[clan] r[reason]", CFGFLAG_CLIENT, ConAddWarEntry, this, "Adds a specific war entry");
@@ -34,14 +34,6 @@ void CWarList::OnConsoleInit()
 	Console()->Register("war_clan_index", "s[group_index] s[name] ?r[reason]", CFGFLAG_CLIENT, ConClanIndex, this, "Remove a clan war entry");
 	Console()->Register("remove_war_name_index", "i[group_index] s[name]", CFGFLAG_CLIENT, ConRemoveNameIndex, this, "Remove a clan war entry");
 	Console()->Register("remove_war_clan_index", "s[group_index] s[name]", CFGFLAG_CLIENT, ConRemoveClanIndex, this, "Remove a clan war entry");
-
-	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	IOHANDLE File = m_pStorage->OpenFile(WARLIST_FILE, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(File)
-	{
-		io_close(File);
-		Console()->ExecuteFile(WARLIST_FILE);
-	}
 }
 
 // In-game war Commands
@@ -478,13 +470,7 @@ CWarList::CWarList()
 	m_WarTypes[0]->m_Color = ColorRGBA(1, 1, 1, 1);
 }
 
-void CWarList::WriteLine(const char *pLine)
-{
-	if(!m_WarlistFile || io_write(m_WarlistFile, pLine, str_length(pLine)) != static_cast<unsigned>(str_length(pLine)) || !io_write_newline(m_WarlistFile))
-		return;
-}
-
-static void EscapeParam(char *pDst, const char *pSrc, int Size)
+static inline void EscapeParam(char *pDst, const char *pSrc, int Size)
 {
 	str_escape(&pDst, pSrc, pDst + Size);
 }
@@ -492,14 +478,6 @@ static void EscapeParam(char *pDst, const char *pSrc, int Size)
 void CWarList::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CWarList *pThis = (CWarList *)pUserData;
-	bool Failed = false;
-	pThis->m_WarlistFile = pThis->m_pStorage->OpenFile(WARLIST_FILE, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-
-	if(!pThis->m_WarlistFile)
-	{
-		dbg_msg("config", "ERROR: opening %s failed", WARLIST_FILE);
-		return;
-	}
 
 	char aBuf[1024];
 	for(int i = 0; i < static_cast<int>(pThis->m_WarTypes.size()); i++)
@@ -515,7 +493,7 @@ void CWarList::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserDat
 		ColorHSLA Color = color_cast<ColorHSLA>(WarType.m_Color);
 
 		str_format(aBuf, sizeof(aBuf), "update_war_group %d \"%s\" %d", i, aEscapeType, Color.Pack(false));
-		pThis->WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::TATERWARLIST, aBuf);
 	}
 	for(CWarEntry &Entry : pThis->m_WarEntries)
 	{
@@ -533,14 +511,6 @@ void CWarList::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserDat
 		EscapeParam(aEscapeReason, Entry.m_aReason, sizeof(aEscapeReason));
 
 		str_format(aBuf, sizeof(aBuf), "add_war_entry \"%s\" \"%s\" \"%s\" \"%s\"", aEscapeType, aEscapeName, aEscapeClan, aEscapeReason);
-		pThis->WriteLine(aBuf);
+		pConfigManager->WriteLine(CONFIGDOMAIN::TATERWARLIST, aBuf);
 	}
-
-	if(io_sync(pThis->m_WarlistFile) != 0)
-		Failed = true;
-	if(io_close(pThis->m_WarlistFile) != 0)
-		Failed = true;
-	pThis->m_WarlistFile = {};
-	if(Failed)
-		dbg_msg("config", "ERROR: writing to %s failed", WARLIST_FILE);
 }
