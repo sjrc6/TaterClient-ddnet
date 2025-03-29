@@ -14,13 +14,12 @@ enum
 	MAX_WARLIST_REASON_LENGTH = 256
 };
 
-// TODO, add chat prefix
 class CWarType
 {
 public:
 	// Intentionally named redundantly because it was confusing otherwise
 	char m_aWarName[MAX_WARLIST_TYPE_LENGTH] = "";
-	ColorRGBA m_Color = ColorRGBA(1, 1, 1, 1);
+	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	bool m_Removable = true;
 	bool m_Imported = false;
 	int m_Index = 0;
@@ -78,8 +77,8 @@ class CWarDataCache
 public:
 	ColorRGBA m_NameColor = ColorRGBA(1, 1, 1, 1);
 	ColorRGBA m_ClanColor = ColorRGBA(1, 1, 1, 1);
-	bool IsWarName = false;
-	bool IsWarClan = false;
+	bool m_WarName = false;
+	bool m_WarClan = false;
 
 	std::vector<char> m_WarGroupMatches = {false, false, false};
 
@@ -154,7 +153,7 @@ public:
 	CWarType *m_pWarTypeNone = m_WarTypes[0];
 
 	// Duplicate war entries ARE allowed
-	std::vector<CWarEntry> m_WarEntries;
+	std::vector<CWarEntry> m_vWarEntries;
 	// TODO: create an unordered map for war clans and war names, to speed up updating the WarPlayers cache
 	// It should be updated when m_WarList changes
 

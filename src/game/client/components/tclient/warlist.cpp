@@ -148,15 +148,15 @@ void CWarList::AddWarEntryInGame(int WarType, const char *pName, const char *pRe
 
 	if(IsClan)
 	{
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		for(auto &Client : GameClient()->m_aClients)
 		{
-			if(!GameClient()->m_aClients[i].m_Active)
+			if(!Client.m_Active)
 				continue;
 			// Found user
-			if(str_comp(GameClient()->m_aClients[i].m_aName, pName) == 0)
+			if(str_comp(Client.m_aName, pName) == 0)
 			{
-				if(str_comp(GameClient()->m_aClients[i].m_aClan, "") != 0)
-					str_copy(Entry.m_aClan, GameClient()->m_aClients[i].m_aClan);
+				if(str_comp(Client.m_aClan, "") != 0)
+					str_copy(Entry.m_aClan, Client.m_aClan);
 				else
 				{
 					char aBuf[128];
@@ -191,16 +191,16 @@ void CWarList::RemoveWarEntryInGame(int WarType, const char *pName, bool IsClan)
 
 	if(IsClan)
 	{
-		for(int i = 0; i < MAX_CLIENTS; ++i)
+		for(auto &Client : GameClient()->m_aClients)
 		{
-			if(!GameClient()->m_aClients[i].m_Active)
+			if(!Client.m_Active)
 				continue;
 			// Found user
-			if(str_comp(GameClient()->m_aClients[i].m_aName, pName) == 0)
+			if(str_comp(Client.m_aName, pName) == 0)
 			{
-				if(str_comp(GameClient()->m_aClients[i].m_aClan, "") != 0)
+				if(str_comp(Client.m_aClan, "") != 0)
 				{
-					str_copy(Entry.m_aClan, GameClient()->m_aClients[i].m_aClan);
+					str_copy(Entry.m_aClan, Client.m_aClan);
 					break;
 				}
 				else
@@ -222,12 +222,12 @@ void CWarList::RemoveWarEntryInGame(int WarType, const char *pName, bool IsClan)
 
 void CWarList::UpdateWarEntry(int Index, const char *pName, const char *pClan, const char *pReason, CWarType *pType)
 {
-	if(Index >= 0 && Index < static_cast<int>(m_WarEntries.size()))
+	if(Index >= 0 && Index < static_cast<int>(m_vWarEntries.size()))
 	{
-		str_copy(m_WarEntries[Index].m_aName, pName);
-		str_copy(m_WarEntries[Index].m_aClan, pClan);
-		str_copy(m_WarEntries[Index].m_aReason, pReason);
-		m_WarEntries[Index].m_pWarType = pType;
+		str_copy(m_vWarEntries[Index].m_aName, pName);
+		str_copy(m_vWarEntries[Index].m_aClan, pClan);
+		str_copy(m_vWarEntries[Index].m_aReason, pReason);
+		m_vWarEntries[Index].m_pWarType = pType;
 	}
 }
 
@@ -269,7 +269,7 @@ void CWarList::AddWarEntry(const char *pName, const char *pClan, const char *pRe
 
 	if(!g_Config.m_ClWarListAllowDuplicates)
 		RemoveWarEntryDuplicates(pName, pClan);
-	m_WarEntries.push_back(Entry);
+	m_vWarEntries.push_back(Entry);
 }
 
 void CWarList::RemoveWarEntryDuplicates(const char *pName, const char *pClan)
@@ -277,14 +277,14 @@ void CWarList::RemoveWarEntryDuplicates(const char *pName, const char *pClan)
 	if(str_comp(pName, "") == 0 && str_comp(pClan, "") == 0)
 		return;
 
-	for(auto it = m_WarEntries.begin(); it != m_WarEntries.end();)
+	for(auto it = m_vWarEntries.begin(); it != m_vWarEntries.end();)
 	{
 		bool IsDuplicate =
 			(str_comp(it->m_aName, pName) == 0) &&
 			(str_comp(it->m_aClan, pClan) == 0);
 
 		if(IsDuplicate)
-			it = m_WarEntries.erase(it);
+			it = m_vWarEntries.erase(it);
 		else
 			++it;
 	}
@@ -309,19 +309,19 @@ void CWarList::AddWarType(const char *pType, ColorRGBA Color)
 
 void CWarList::RemoveWarEntry(const char *pName, const char *pClan, const char *pType)
 {
-	CWarType *WarType = FindWarType(pType);
-	CWarEntry Entry(WarType, pName, pClan, "");
-	auto it = std::find(m_WarEntries.begin(), m_WarEntries.end(), Entry);
-	if(it != m_WarEntries.end())
-		m_WarEntries.erase(it);
+	CWarType *pWarType = FindWarType(pType);
+	CWarEntry Entry(pWarType, pName, pClan, "");
+	auto it = std::find(m_vWarEntries.begin(), m_vWarEntries.end(), Entry);
+	if(it != m_vWarEntries.end())
+		m_vWarEntries.erase(it);
 }
 
 void CWarList::RemoveWarEntry(CWarEntry *Entry)
 {
-	auto it = std::find_if(m_WarEntries.begin(), m_WarEntries.end(),
+	auto it = std::find_if(m_vWarEntries.begin(), m_vWarEntries.end(),
 		[Entry](const CWarEntry &WarEntry) { return &WarEntry == Entry; });
-	if(it != m_WarEntries.end())
-		m_WarEntries.erase(it);
+	if(it != m_vWarEntries.end())
+		m_vWarEntries.erase(it);
 }
 
 void CWarList::RemoveWarType(const char *pType)
@@ -329,7 +329,7 @@ void CWarList::RemoveWarType(const char *pType)
 	CWarType Type(pType);
 
 	auto it = std::find_if(m_WarTypes.begin(), m_WarTypes.end(),
-		[&Type](CWarType *warTypePtr) { return *warTypePtr == Type; });
+		[&Type](CWarType *pWarTypePtr) { return *pWarTypePtr == Type; });
 	if(it != m_WarTypes.end())
 	{
 		// Don't remove default war types
@@ -337,7 +337,7 @@ void CWarList::RemoveWarType(const char *pType)
 			return;
 
 		// Find all war entries and set them to None if they are using this type
-		for(CWarEntry &Entry : m_WarEntries)
+		for(CWarEntry &Entry : m_vWarEntries)
 		{
 			if(*Entry.m_pWarType == **it)
 			{
@@ -352,7 +352,7 @@ CWarType *CWarList::FindWarType(const char *pType)
 {
 	CWarType Type(pType);
 	auto it = std::find_if(m_WarTypes.begin(), m_WarTypes.end(),
-		[&Type](CWarType *warTypePtr) { return *warTypePtr == Type; });
+		[&Type](CWarType *pWarTypePtr) { return *pWarTypePtr == Type; });
 	if(it != m_WarTypes.end())
 		return *it;
 	else
@@ -361,11 +361,11 @@ CWarType *CWarList::FindWarType(const char *pType)
 
 CWarEntry *CWarList::FindWarEntry(const char *pName, const char *pClan, const char *pType)
 {
-	CWarType *WarType = FindWarType(pType);
-	CWarEntry Entry(WarType, pName, pClan, "");
-	auto it = std::find(m_WarEntries.begin(), m_WarEntries.end(), Entry);
+	CWarType *pWarType = FindWarType(pType);
+	CWarEntry Entry(pWarType, pName, pClan, "");
+	auto it = std::find(m_vWarEntries.begin(), m_vWarEntries.end(), Entry);
 
-	if(it != m_WarEntries.end())
+	if(it != m_vWarEntries.end())
 		return &(*it);
 	else
 		return nullptr;
@@ -373,7 +373,7 @@ CWarEntry *CWarList::FindWarEntry(const char *pName, const char *pClan, const ch
 
 ColorRGBA CWarList::GetPriorityColor(int ClientId)
 {
-	if(m_WarPlayers[ClientId].IsWarClan && !m_WarPlayers[ClientId].IsWarName)
+	if(m_WarPlayers[ClientId].m_WarClan && !m_WarPlayers[ClientId].m_WarName)
 		return m_WarPlayers[ClientId].m_ClanColor;
 	else
 		return m_WarPlayers[ClientId].m_NameColor;
@@ -393,20 +393,20 @@ bool CWarList::GetAnyWar(int ClientId)
 {
 	if(ClientId < 0)
 		return false;
-	return m_WarPlayers[ClientId].IsWarClan || m_WarPlayers[ClientId].IsWarName;
+	return m_WarPlayers[ClientId].m_WarClan || m_WarPlayers[ClientId].m_WarName;
 }
 
 bool CWarList::GetNameWar(int ClientId)
 {
 	if(ClientId < 0)
 		return false;
-	return m_WarPlayers[ClientId].IsWarName;
+	return m_WarPlayers[ClientId].m_WarName;
 }
 bool CWarList::GetClanWar(int ClientId)
 {
 	if(ClientId < 0)
 		return false;
-	return m_WarPlayers[ClientId].IsWarClan;
+	return m_WarPlayers[ClientId].m_WarClan;
 }
 
 void CWarList::GetReason(char *pReason, int ClientId)
@@ -434,30 +434,30 @@ void CWarList::UpdateWarPlayers()
 		if(!GameClient()->m_aClients[i].m_Active)
 			continue;
 
-		m_WarPlayers[i].IsWarName = false;
-		m_WarPlayers[i].IsWarClan = false;
+		m_WarPlayers[i].m_WarName = false;
+		m_WarPlayers[i].m_WarClan = false;
 		memset(m_WarPlayers[i].m_aReason, 0, sizeof(m_WarPlayers[i].m_aReason));
 		m_WarPlayers[i].m_NameColor = ColorRGBA(1, 1, 1, 1);
 		m_WarPlayers[i].m_ClanColor = ColorRGBA(1, 1, 1, 1);
 		m_WarPlayers[i].m_WarGroupMatches.clear();
 		m_WarPlayers[i].m_WarGroupMatches.resize((int)m_WarTypes.size(), false);
 
-		for(CWarEntry &Entry : m_WarEntries)
+		for(CWarEntry &Entry : m_vWarEntries)
 		{
 			if(str_comp(GameClient()->m_aClients[i].m_aName, Entry.m_aName) == 0 && str_comp(Entry.m_aName, "") != 0)
 			{
 				str_copy(m_WarPlayers[i].m_aReason, Entry.m_aReason);
-				m_WarPlayers[i].IsWarName = true;
+				m_WarPlayers[i].m_WarName = true;
 				m_WarPlayers[i].m_NameColor = Entry.m_pWarType->m_Color;
 				m_WarPlayers[i].m_WarGroupMatches[Entry.m_pWarType->m_Index] = true;
 			}
 			else if(str_comp(GameClient()->m_aClients[i].m_aClan, Entry.m_aClan) == 0 && str_comp(Entry.m_aClan, "") != 0)
 			{
 				// Name war reason has priority over clan war reason
-				if(!m_WarPlayers[i].IsWarName)
+				if(!m_WarPlayers[i].m_WarName)
 					str_copy(m_WarPlayers[i].m_aReason, Entry.m_aReason);
 
-				m_WarPlayers[i].IsWarClan = true;
+				m_WarPlayers[i].m_WarClan = true;
 				m_WarPlayers[i].m_ClanColor = Entry.m_pWarType->m_Color;
 				m_WarPlayers[i].m_WarGroupMatches[Entry.m_pWarType->m_Index] = true;
 			}
@@ -517,7 +517,7 @@ void CWarList::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserDat
 		str_format(aBuf, sizeof(aBuf), "update_war_group %d \"%s\" %d", i, aEscapeType, Color.Pack(false));
 		pThis->WriteLine(aBuf);
 	}
-	for(CWarEntry &Entry : pThis->m_WarEntries)
+	for(CWarEntry &Entry : pThis->m_vWarEntries)
 	{
 		// Imported entries don't get saved
 		if(Entry.m_Imported)

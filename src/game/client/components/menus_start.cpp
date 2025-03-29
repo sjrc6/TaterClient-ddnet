@@ -218,7 +218,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	char aBuf[128];
 	const IUpdater::EUpdaterState State = Updater()->GetCurrentState();
-	const bool NeedUpdate = GameClient() -> m_Tater.NeedUpdate();
+	const bool NeedUpdate = GameClient()->m_Tater.NeedUpdate();
 
 	if(State == IUpdater::CLEAN && NeedUpdate)
 	{

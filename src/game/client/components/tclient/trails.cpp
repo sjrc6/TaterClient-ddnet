@@ -186,47 +186,47 @@ void CTrails::OnRender()
 
 			switch(g_Config.m_ClTeeTrailColorMode)
 			{
-				case COLORMODE_SOLID:
-					Part.Col = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClTeeTrailColor));
-					break;
-				case COLORMODE_TEE:
-					if(TeeInfo.m_CustomColoredSkin)
-						Part.Col = TeeInfo.m_ColorBody;
+			case COLORMODE_SOLID:
+				Part.Col = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClTeeTrailColor));
+				break;
+			case COLORMODE_TEE:
+				if(TeeInfo.m_CustomColoredSkin)
+					Part.Col = TeeInfo.m_ColorBody;
+				else
+					Part.Col = TeeInfo.m_BloodColor;
+				break;
+			case COLORMODE_RAINBOW:
+			{
+				float Cycle = (1.0f / TrailLength) * 0.5f;
+				float Hue = std::fmod(((Part.Tick + 6361 * ClientId) % 1000000) * Cycle, 1.0f);
+				Part.Col = color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, 0.5f));
+				break;
+			}
+			case COLORMODE_SPEED:
+			{
+				float Speed = 0.0f;
+				if(s_Trail.size() > 3)
+				{
+					if(i < 2)
+						Speed = distance(s_Trail.at(i + 2).UnmovedPos, Part.UnmovedPos) / std::abs(s_Trail.at(i + 2).Tick - Part.Tick);
 					else
-						Part.Col = TeeInfo.m_BloodColor;
-					break;
-				case COLORMODE_RAINBOW:
-				{
-					float Cycle = (1.0f / TrailLength) * 0.5f;
-					float Hue = std::fmod(((Part.Tick + 6361 * ClientId) % 1000000) * Cycle, 1.0f);
-					Part.Col = color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, 0.5f));
-					break;
+						Speed = distance(Part.UnmovedPos, s_Trail.at(i - 2).UnmovedPos) / std::abs(Part.Tick - s_Trail.at(i - 2).Tick);
 				}
-				case COLORMODE_SPEED:
-				{
-					float Speed = 0.0f;
-					if(s_Trail.size() > 3)
-					{
-						if(i < 2)
-							Speed = distance(s_Trail.at(i + 2).UnmovedPos, Part.UnmovedPos) / std::abs(s_Trail.at(i + 2).Tick - Part.Tick);
-						else
-							Speed = distance(Part.UnmovedPos, s_Trail.at(i - 2).UnmovedPos) / std::abs(Part.Tick - s_Trail.at(i - 2).Tick);
-					}
-					Part.Col = color_cast<ColorRGBA>(ColorHSLA(65280 * ((int)(Speed * Speed / 12.5f) + 1)).UnclampLighting(ColorHSLA::DARKEST_LGT));
-					break;
-				}
-				default:
-					dbg_assert(false, "Invalid value for g_Config.m_ClTeeTrailColorMode");
-					dbg_break();
+				Part.Col = color_cast<ColorRGBA>(ColorHSLA(65280 * ((int)(Speed * Speed / 12.5f) + 1)).UnclampLighting(ColorHSLA::DARKEST_LGT));
+				break;
+			}
+			default:
+				dbg_assert(false, "Invalid value for g_Config.m_ClTeeTrailColorMode");
+				dbg_break();
 			}
 
 			Part.Col.a = Alpha;
 			if(g_Config.m_ClTeeTrailFade)
 				Part.Col.a *= 1.0 - Part.Progress;
 
-			Part.Width = g_Config.m_ClTeeTrailWidth;
+			Part.Width = Width;
 			if(g_Config.m_ClTeeTrailTaper)
-				Part.Width = g_Config.m_ClTeeTrailWidth * (1.0 - Part.Progress);
+				Part.Width = Width * (1.0 - Part.Progress);
 		}
 
 		// Remove duplicate elements (those with same Pos)
@@ -337,7 +337,7 @@ void CTrails::OnRender()
 				}
 				else
 				{
- 					Top = Part.Top;
+					Top = Part.Top;
 					Bot = Part.Bot;
 				}
 

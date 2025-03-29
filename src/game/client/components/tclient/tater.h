@@ -1,7 +1,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_TCLIENT_TATER_H
 #define GAME_CLIENT_COMPONENTS_TCLIENT_TATER_H
-#include <game/client/component.h>
 #include <engine/shared/http.h>
+#include <game/client/component.h>
 
 class CTater : public CComponent
 {
@@ -17,7 +17,6 @@ class CTater : public CComponent
 	char m_PreviousOwnMessage[2048] = {};
 
 	bool SendNonDuplicateMessage(int Team, const char *pLine);
-
 
 public:
 	CTater();

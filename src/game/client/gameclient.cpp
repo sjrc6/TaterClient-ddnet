@@ -2652,10 +2652,10 @@ void CGameClient::OnPredict()
 
 			// Cursed hack to get the game tick consistently
 			int GameTick = Client()->GameTick(g_Config.m_ClDummy) + (int)Client()->IntraGameTick(g_Config.m_ClDummy);
-			static int PrevGameTick = 0;
-			if(PrevGameTick == GameTick)
+			static int s_PrevGameTick = 0;
+			if(s_PrevGameTick == GameTick)
 				GameTick++;
-			PrevGameTick = Client()->GameTick(g_Config.m_ClDummy) + (int)Client()->IntraGameTick(g_Config.m_ClDummy);
+			s_PrevGameTick = Client()->GameTick(g_Config.m_ClDummy) + (int)Client()->IntraGameTick(g_Config.m_ClDummy);
 
 			vec2 ServerPos = m_aClients[i].m_aPredPos[GameTick % 200];
 			vec2 PrevServerPos = m_aClients[i].m_aPredPos[(GameTick - 1) % 200];
@@ -2752,9 +2752,9 @@ void CGameClient::OnPredict()
 			// Decompose prediction vector into 2 components based on the trusted vector
 			vec2 PredVector = PredPos - ServerPos;
 			vec2 Forward = normalize(TrustedVector);
-			float dotPF = std::max(0.0f, dot(normalize(PredVector), Forward));
-			vec2 ConfidenceParallel = Forward * dotPF * length(PredVector);
-			if(dotPF == 0.0f)
+			float DotPf = std::max(0.0f, dot(normalize(PredVector), Forward));
+			vec2 ConfidenceParallel = Forward * DotPf * length(PredVector);
+			if(DotPf == 0.0f)
 				ConfidenceParallel = vec2(0, 0);
 			vec2 ConfidencePerp = PredVector - ConfidenceParallel;
 
