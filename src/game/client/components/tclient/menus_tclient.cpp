@@ -961,41 +961,43 @@ void CMenus::RenderSettingsTClientSettngs(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClHideFrozenGhosts, TCLocalize("Hide ghosts of frozen players"), &g_Config.m_ClHideFrozenGhosts, &Column, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClRenderGhostAsCircle, TCLocalize("Render ghosts as circles"), &g_Config.m_ClRenderGhostAsCircle, &Column, LineSize);
 
-	static CKeyInfo Key = CKeyInfo{"Toggle ghosts key", "toggle tc_show_others_ghosts 0 1", 0, 0};
-	Key.m_ModifierCombination = Key.m_KeyId = 0;
-	for(int Mod = 0; Mod < CBinds::MODIFIER_COMBINATION_COUNT; Mod++)
 	{
-		for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
+		static CKeyInfo Key = CKeyInfo{"Toggle ghosts key", "toggle tc_show_others_ghosts 0 1", 0, 0};
+		Key.m_ModifierCombination = Key.m_KeyId = 0;
+		for(int Mod = 0; Mod < CBinds::MODIFIER_COMBINATION_COUNT; Mod++)
 		{
-			const char *pBind = m_pClient->m_Binds.Get(KeyId, Mod);
-			if(!pBind[0])
-				continue;
-
-			if(str_comp(pBind, Key.m_pCommand) == 0)
+			for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 			{
-				Key.m_KeyId = KeyId;
-				Key.m_ModifierCombination = Mod;
-				break;
+				const char *pBind = m_pClient->m_Binds.Get(KeyId, Mod);
+				if(!pBind[0])
+					continue;
+
+				if(str_comp(pBind, Key.m_pCommand) == 0)
+				{
+					Key.m_KeyId = KeyId;
+					Key.m_ModifierCombination = Mod;
+					break;
+				}
 			}
 		}
-	}
 
-	CUIRect KeyButton, KeyLabel;
-	Column.HSplitTop(LineSize, &KeyButton, &Column);
-	KeyButton.VSplitMid(&KeyLabel, &KeyButton);
-	char aBuf[64];
-	str_format(aBuf, sizeof(aBuf), "%s:", TCLocalize(Key.m_pName));
-	Ui()->DoLabel(&KeyLabel, aBuf, 12.0f, TEXTALIGN_ML);
-	int OldId = Key.m_KeyId, OldModifierCombination = Key.m_ModifierCombination, NewModifierCombination;
-	int NewId = DoKeyReader(&Key, &KeyButton, OldId, OldModifierCombination, &NewModifierCombination);
-	if(NewId != OldId || NewModifierCombination != OldModifierCombination)
-	{
-		if(OldId != 0 || NewId == 0)
-			m_pClient->m_Binds.Bind(OldId, "", false, OldModifierCombination);
-		if(NewId != 0)
-			m_pClient->m_Binds.Bind(NewId, Key.m_pCommand, false, NewModifierCombination);
+		CUIRect KeyButton, KeyLabel;
+		Column.HSplitTop(LineSize, &KeyButton, &Column);
+		KeyButton.VSplitMid(&KeyLabel, &KeyButton);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s:", TCLocalize(Key.m_pName));
+		Ui()->DoLabel(&KeyLabel, aBuf, 12.0f, TEXTALIGN_ML);
+		int OldId = Key.m_KeyId, OldModifierCombination = Key.m_ModifierCombination, NewModifierCombination;
+		int NewId = DoKeyReader(&Key, &KeyButton, OldId, OldModifierCombination, &NewModifierCombination);
+		if(NewId != OldId || NewModifierCombination != OldModifierCombination)
+		{
+			if(OldId != 0 || NewId == 0)
+				m_pClient->m_Binds.Bind(OldId, "", false, OldModifierCombination);
+			if(NewId != 0)
+				m_pClient->m_Binds.Bind(NewId, Key.m_pCommand, false, NewModifierCombination);
+		}
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	}
-	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 
 	// ***** Rainbow ***** //
@@ -1074,6 +1076,67 @@ void CMenus::RenderSettingsTClientSettngs(CUIRect MainView)
 	Ui()->DoScrollbarOption(&g_Config.m_ClTeeTrailLength, &g_Config.m_ClTeeTrailLength, &Button, TCLocalize("Trail length"), 0, 200);
 	Column.HSplitTop(LineSize, &Button, &Column);
 	Ui()->DoScrollbarOption(&g_Config.m_ClTeeTrailAlpha, &g_Config.m_ClTeeTrailAlpha, &Button, TCLocalize("Trail alpha"), 0, 100);
+
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	// ***** BG Draw ***** //
+	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("BG Draw"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	static CButtonContainer s_BgDrawColor;
+	DoLine_ColorPicker(&s_BgDrawColor, ColorPickerLineSize, ColorPickerLabelSize, ColorPickerLineSpacing, &Column, TCLocalize("Color"), &g_Config.m_ClBgDrawColor, ColorRGBA(1.0f, 1.0f, 1.0f), false);
+
+	Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
+	if(g_Config.m_ClBgDrawFadeTime == 0)
+		Ui()->DoScrollbarOption(&g_Config.m_ClBgDrawFadeTime, &g_Config.m_ClBgDrawFadeTime, &Button, TCLocalize("Time until strokes dissapear"), 0, 600, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_MULTILINE, TCLocalize(" seconds (never)"));
+	else
+		Ui()->DoScrollbarOption(&g_Config.m_ClBgDrawFadeTime, &g_Config.m_ClBgDrawFadeTime, &Button, TCLocalize("Time until strokes dissapear"), 0, 600, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_MULTILINE, TCLocalize(" seconds"));
+
+	Column.HSplitTop(LineSize * 2.0f, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_ClBgDrawWidth, &g_Config.m_ClBgDrawWidth, &Button, TCLocalize("Width"), 1, 50, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_MULTILINE);
+
+	{
+		Column.HSplitTop(MarginSmall, nullptr, &Column);
+		static CKeyInfo Key = CKeyInfo{"BG draw", "+bg_draw", 0, 0};
+		Key.m_ModifierCombination = Key.m_KeyId = 0;
+		for(int Mod = 0; Mod < CBinds::MODIFIER_COMBINATION_COUNT; Mod++)
+		{
+			for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
+			{
+				const char *pBind = m_pClient->m_Binds.Get(KeyId, Mod);
+				if(!pBind[0])
+					continue;
+
+				if(str_comp(pBind, Key.m_pCommand) == 0)
+				{
+					Key.m_KeyId = KeyId;
+					Key.m_ModifierCombination = Mod;
+					break;
+				}
+			}
+		}
+
+		CUIRect KeyButton, KeyLabel;
+		Column.HSplitTop(LineSize, &KeyButton, &Column);
+		KeyButton.VSplitMid(&KeyLabel, &KeyButton);
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s:", TCLocalize(Key.m_pName));
+		Ui()->DoLabel(&KeyLabel, aBuf, 12.0f, TEXTALIGN_ML);
+		int OldId = Key.m_KeyId, OldModifierCombination = Key.m_ModifierCombination, NewModifierCombination;
+		int NewId = DoKeyReader(&Key, &KeyButton, OldId, OldModifierCombination, &NewModifierCombination);
+		if(NewId != OldId || NewModifierCombination != OldModifierCombination)
+		{
+			if(OldId != 0 || NewId == 0)
+				m_pClient->m_Binds.Bind(OldId, "", false, OldModifierCombination);
+			if(NewId != 0)
+				m_pClient->m_Binds.Bind(NewId, Key.m_pCommand, false, NewModifierCombination);
+		}
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+	}
 
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	Column.HSplitTop(MarginSmall, nullptr, &Column);

@@ -60,6 +60,7 @@
 #include "components/statboard.h"
 #include "components/tclient/bindchat.h"
 #include "components/tclient/bindwheel.h"
+#include "components/tclient/bg_draw.h"
 #include "components/tclient/outlines.h"
 #include "components/tclient/player_indicator.h"
 #include "components/tclient/rainbow.h"
@@ -192,6 +193,7 @@ public:
 	CStatusBar m_StatusBar;
 	CBindchat m_Bindchat;
 	CBindWheel m_Bindwheel;
+	CBgDraw m_BgDraw;
 	CTater m_Tater;
 	CTrails m_Trails;
 	CPlayerIndicator m_PlayerIndicator;
