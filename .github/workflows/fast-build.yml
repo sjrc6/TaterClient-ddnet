@@ -26,7 +26,7 @@ jobs:
           package-file: "*-macos.dmg"
           fancy: false
         - os: windows-latest
-          cmake-args: -A x64 -DDISCORD=ON
+          cmake-args: -A x64 -DDISCORD=ON -DTOOLS=OFF
           cmake-init-env: CXXFLAGS= LDFLAGS=
           package-file: "*-win64.zip"
           fancy: false
