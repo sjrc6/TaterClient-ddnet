@@ -12,16 +12,19 @@
     <meta itemprop="description" content="Open source DDNet client with additional features" />
     <meta itemprop="image" content="assets/logo-vert.png" />
 
+    <link rel="stylesheet" href="font.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <nav data-aos="fade-down" data-aos-duration="1000">
+    <nav>
         <div class="nav-content">
             <div class="logo">T-CLIENT</div>
             <div class="nav-links">
-                <a href="/faq">FAQ</a>
+                <a href="faq/">FAQ</a>
+                <span class="divider"></span>
+                <a href="changelog/">Changelog</a>
                 <span class="divider"></span>
                 <a href="#features">Features</a>
                 <span class="divider"></span>
@@ -64,84 +67,108 @@
             <h2>Features</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <img src="assets/features/fastinput.png" alt="Fast Inputs">
+                    <div class="image-container">
+                        <img src="assets/features/fastinput.png" alt="Fast Inputs">
+                    </div>
                     <div class="feature-content">
                         <h3>Fast Inputs</h3>
                         <p>Reduces input delay by 20ms</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/outlines.png" alt="Outlines">
+                    <div class="image-container">
+                        <img src="assets/features/outlines.png" alt="Outlines">
+                    </div>
                     <div class="feature-content">
                         <h3>Outlines</h3>
                         <p>Renders outlines around certain tiles to make your entities prettier</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/profiles.png" alt="Profiles">
+                    <div class="image-container">
+                        <img src="assets/features/profiles.png" alt="Profiles">
+                    </div>
                     <div class="feature-content">
                         <h3>Profiles</h3>
                         <p>Save and load player settings, including skin, name, clan and others</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/bindwheel.png" alt="BindWheel">
+                    <div class="image-container">
+                        <img src="assets/features/bindwheel.png" alt="BindWheel">
+                    </div>
                     <div class="feature-content">
                         <h3>Bind Wheel</h3>
                         <p>Easily execute different binds from a single key</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/ftd.png" alt="Frozen Tee Display">
+                    <div class="image-container">
+                        <img src="assets/features/ftd.png" alt="Frozen Tee Display">
+                    </div>
                     <div class="feature-content">
                         <h3>Frozen Tee Display</h3>
                         <p>See all the frozen players on your team</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/antilatency.png" alt="Anti Latency Tools">
+                    <div class="image-container">
+                        <img src="assets/features/antilatency.png" alt="Anti Latency Tools">
+                    </div>
                     <div class="feature-content">
                         <h3>Anti Latency Tools</h3>
                         <p>Settings to help mitigate ping for gores players</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/playerind.png" alt="Player Indicator">
+                    <div class="image-container">
+                        <img src="assets/features/playerind.png" alt="Player Indicator">
+                    </div>
                     <div class="feature-content">
                         <h3>Player Indicator</h3>
                         <p>Track players around you without needing to zoom out<br>(does not work on pvp)</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/warlist.png" alt="War List">
+                    <div class="image-container">
+                        <img src="assets/features/warlist.png" alt="War List">
+                    </div>
                     <div class="feature-content">
                         <h3>War List</h3>
                         <p>Easily manage your block wars or other player groups</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/antiping.png" alt="Improved Antiping Smoothing">
+                    <div class="image-container">
+                        <img src="assets/features/antiping.png" alt="Improved Antiping Smoothing">
+                    </div>
                     <div class="feature-content">
                         <h3>Improved Antiping Smoothing</h3>
                         <p>Less jittery antiping</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/trails.png" alt="Tee Trails">
+                    <div class="image-container">
+                        <img src="assets/features/trails.png" alt="Tee Trails">
+                    </div>
                     <div class="feature-content">
                         <h3>Tee Trails</h3>
                         <p>Beautifully rendered trails</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/fonts.png" alt="Custom Fonts">
+                    <div class="image-container">
+                        <img src="assets/features/fonts.png" alt="Custom Fonts">
+                    </div>
                     <div class="feature-content">
                         <h3>Custom Fonts</h3>
                         <p>Change the font for the entire client</p>
                     </div>
                 </div>
                 <div class="feature-card">
-                    <img src="assets/features/more.png" alt="Plus More">
+                    <div class="image-container">
+                        <img src="assets/features/more.png" alt="Plus More">
+                    </div>
                     <div class="feature-content">
                         <h3>Plus More</h3>
                         <p>Over 20 other unique features not listed here</p>
@@ -182,7 +209,7 @@
                 </div>
                 <div class="download-version">
                     <a href="https://github.com/sjrc6/TaterClient-ddnet/releases/latest/download/TClient-macOS.dmg" target="_blank">
-                        <button class="mac-download">
+                        <button class="download-btn mac-download">
                             <img src="assets/macos-icon.svg" alt="Download">
                             <span>Download</span>
                         </button>
@@ -271,6 +298,16 @@
         });
 
         fetchLatestRelease();
+    </script>
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 150) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>

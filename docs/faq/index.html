@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tater Client | FAQ</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="font.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
     <nav data-aos="fade-down" data-aos-duration="1000">
         <div class="nav-content">
-            <div class="logo"><a href="../">T-CLIENT</a></div>
+            <div class="logo">T-CLIENT</div>
             <div class="nav-links">
+                <a href="../changelog/">Changelog</a>
+                <span class="divider"></span>
                 <a href="https://discord.gg/BgPSapKRkZ" target="_blank" class="discord-link">
                     Discord
                     <img class="discord-icon" src="../assets/discord.svg" alt="Discord">
@@ -48,5 +51,15 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 150) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+    </script>
 </body>
 </html>
