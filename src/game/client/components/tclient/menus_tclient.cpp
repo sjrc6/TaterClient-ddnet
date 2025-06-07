@@ -1928,7 +1928,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 		MainView.HSplitTop(50.0f, &Label, &MainView);
 		Label.VSplitLeft(250.0f, &Label, nullptr);
 
-		if(DoSkin && strlen(LoadProfile.m_SkinName) != 0)
+		if(DoSkin && strlen(LoadProfile.m_SkinName))
 		{
 			const CSkin *pLoadSkin = m_pClient->m_Skins.Find(LoadProfile.m_SkinName);
 			OwnSkinInfo.m_OriginalRenderSkin = pLoadSkin->m_OriginalSkin;
@@ -1950,7 +1950,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 
 		if(DoName && strlen(LoadProfile.m_Name) != 0)
 			str_format(aName, sizeof(aName), "%s", LoadProfile.m_Name);
-		if(DoClan && strlen(LoadProfile.m_Clan) != 0)
+		if(DoClan && (strlen(LoadProfile.m_Clan) != 0 || g_Config.m_ClAllowEmptyClan))
 			str_format(aClan, sizeof(aClan), "%s", LoadProfile.m_Clan);
 
 		Label.VSplitLeft(90.0f, &FlagRect, &Label);
@@ -1964,7 +1964,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 		Ui()->DoLabel(&Section, aTempBuf, FontSize, TEXTALIGN_ML);
 
 		Label.HSplitTop(LineSize, &Section, &Label);
-		str_format(aTempBuf, sizeof(aTempBuf), TCLocalize("Skin: %s"), (DoSkin && strlen(LoadProfile.m_SkinName) != 0) ? LoadProfile.m_SkinName : pSkinName);
+		str_format(aTempBuf, sizeof(aTempBuf), TCLocalize("Skin: %s"), strlen(LoadProfile.m_SkinName) != 0 ? LoadProfile.m_SkinName : pSkinName);
 		Ui()->DoLabel(&Section, aTempBuf, FontSize, TEXTALIGN_ML);
 
 		FlagRect.VSplitRight(50.0f, nullptr, &FlagRect);
@@ -2011,6 +2011,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClApplyProfileName, TCLocalize("Save/Load Name"), &g_Config.m_ClApplyProfileName, &LabelMid, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClApplyProfileClan, TCLocalize("Save/Load Clan"), &g_Config.m_ClApplyProfileClan, &LabelMid, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClApplyProfileFlag, TCLocalize("Save/Load Flag"), &g_Config.m_ClApplyProfileFlag, &LabelMid, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAllowEmptyClan, TCLocalize("Overwrite clan even if empty"), &g_Config.m_ClAllowEmptyClan, &LabelMid, LineSize);
 
 	CUIRect Button;
 	LabelRight.VSplitLeft(150.0f, &LabelRight, nullptr);
@@ -2036,7 +2037,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 					g_Config.m_ClPlayerDefaultEyes = LoadProfile.m_Emote;
 				if(DoName && strlen(LoadProfile.m_Name) != 0)
 					str_copy(g_Config.m_PlayerName, LoadProfile.m_Name, sizeof(g_Config.m_PlayerName));
-				if(DoClan && strlen(LoadProfile.m_Clan) != 0)
+				if(DoClan && (strlen(LoadProfile.m_Clan) != 0 || g_Config.m_ClAllowEmptyClan))
 					str_copy(g_Config.m_PlayerClan, LoadProfile.m_Clan, sizeof(g_Config.m_PlayerClan));
 				if(DoFlag && LoadProfile.m_CountryFlag != -2)
 					g_Config.m_PlayerCountry = LoadProfile.m_CountryFlag;
@@ -2054,7 +2055,7 @@ void CMenus::RenderSettingsProfiles(CUIRect MainView)
 					g_Config.m_ClDummyDefaultEyes = LoadProfile.m_Emote;
 				if(DoName && strlen(LoadProfile.m_Name) != 0)
 					str_copy(g_Config.m_ClDummyName, LoadProfile.m_Name, sizeof(g_Config.m_ClDummyName));
-				if(DoClan && strlen(LoadProfile.m_Clan) != 0)
+				if(DoClan && (strlen(LoadProfile.m_Clan) != 0 || g_Config.m_ClAllowEmptyClan))
 					str_copy(g_Config.m_ClDummyClan, LoadProfile.m_Clan, sizeof(g_Config.m_ClDummyClan));
 				if(DoFlag && LoadProfile.m_CountryFlag != -2)
 					g_Config.m_ClDummyCountry = LoadProfile.m_CountryFlag;
