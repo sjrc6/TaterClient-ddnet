@@ -243,3 +243,7 @@ MACRO_CONFIG_STR(ClVolleyBallBetterBallSkin, tc_volleyball_better_ball_skin, 24,
 // Mod
 MACRO_CONFIG_INT(ClShowPlayerHitBoxes, tc_show_player_hit_boxes, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show player hit boxes (1 = predicted, 2 = predicted and unpredicted)")
 MACRO_CONFIG_INT(ClHideChatBubbles, tc_hide_chat_bubbles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide your own chat bubbles, only works when authed in remote console")
+
+#if defined(CONF_FAMILY_WINDOWS)
+MACRO_CONFIG_INT(ClWriteCrashDump, tc_write_crash_dump, 0, 0, 2, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Whether to write a crash dump on crash (0 = off, 1 = on/normal, 2 = full")
+#endif

@@ -2338,6 +2338,8 @@ if(CLIENT)
     checksum.h
     client.cpp
     client.h
+    crash_handler.cpp
+    crash_handler.h
     demoedit.cpp
     demoedit.h
     discord.cpp

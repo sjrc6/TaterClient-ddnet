@@ -57,6 +57,7 @@
 #include "friends.h"
 #include "notifications.h"
 #include "serverbrowser.h"
+#include "crash_handler.h"
 
 #if defined(CONF_VIDEORECORDER)
 #include "video.h"
@@ -4931,6 +4932,12 @@ int main(int argc, const char **argv)
 		}
 	}
 	g_Config.m_ClConfigVersion = 1;
+
+#if defined(CONF_FAMILY_WINDOWS)
+	if (g_Config.m_ClWriteCrashDump > 0) {
+		InitCrashHandler(g_Config.m_ClWriteCrashDump == 2);
+	}
+#endif
 
 	// parse the command line arguments
 	pConsole->SetUnknownCommandCallback(UnknownArgumentCallback, pClient);
