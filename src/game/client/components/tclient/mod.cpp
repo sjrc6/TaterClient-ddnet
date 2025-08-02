@@ -99,6 +99,8 @@ public:
 					return;
 				}
 			m_Type = EType::ERROR;
+			dbg_assert(pStr, "pStr is nullptr");
+			dbg_assert(strlen(pStr) < 128, "pStr is too big");
 			m_Content = "'" + std::string(pStr) + "' was not found";
 			return;
 		}
