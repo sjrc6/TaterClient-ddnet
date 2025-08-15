@@ -12,6 +12,10 @@
           {
             "question": "Will my settings transfer from vanilla DDNet?",
             "answer": "Yes."
+          },
+          {
+            "question": "Install via Launcher",
+            "answer": "You can install TClient via the <a href='https://twlauncher.netlify.app'>TWLauncher</a> by selecting the TClient in the launcher. This will automatically download the latest version of client for you."
           }
         ]
       },
@@ -31,6 +35,10 @@
       {
         "title": "Troubleshooting",
         "questions": [
+          {
+            "question": "Client doesn't launch from steam",
+            "answer": "Try using <a href='https://twlauncher.netlify.app'>TWLauncher</a> instead, if that doesn't work, report a bug in the Discord server or GitHub issues page."
+          },
           {
             "question": "How do I report a bug?",
             "answer": "Report bugs on the GitHub issues page or Discord server. Please include steps to reproduce the issue."
