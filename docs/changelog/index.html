@@ -12,7 +12,7 @@
     <meta itemprop="description" content="DDNet client with additional feaetures, customizable outlines, profiles, bind wheel, frozen tee display, anti-latency tools, player indicator" />
     <meta itemprop="image" content="../assets/logo-vert.png" />
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
@@ -21,12 +21,53 @@
             gfm: true
         });
     </script>
+    <style>
+        /* Font Imports */
+        @font-face {
+            font-family: 'Druk Wide Cyr';
+            src: url('../assets/fonts/Druk-Wide-Cyr-Bold.otf') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('../assets/fonts/Montserrat-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('../assets/fonts/Montserrat-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('../assets/fonts/Montserrat-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
 </head>
 <body>
     <nav data-aos="fade-down" data-aos-duration="1000">
         <div class="nav-content">
-            <div class="logo"><a href="../">T-CLIENT</a></div>
+            <div class="logo">T-CLIENT</div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
             <div class="nav-links">
+                <a href="../faq/">FAQ</a>
+                <span class="divider"></span>
                 <a href="https://discord.gg/BgPSapKRkZ" class="discord-link">
                     Discord
                     <img class="discord-icon" src="../assets/discord.svg" alt="Discord">
@@ -55,7 +96,7 @@
 
     <footer>
         <div class="footer-content">
-            <p>2024 <a href="https://github.com/sjrc6/TaterClient-ddnet" target="_blank">TaterClient</a></p>
+            <p>2025 <a href="https://github.com/sjrc6/TaterClient-ddnet" target="_blank">TaterClient</a></p>
             <span class="divider"></span>
             <p>Website by <a href="https://github.com/noxygalaxy" target="_blank">@noxygalaxy</a></p>
         </div>
@@ -66,5 +107,24 @@
         AOS.init();
     </script>
     <script src="script.js"></script>
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 150) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        document.querySelector('.hamburger').addEventListener('click', () => {
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            const nav = document.querySelector('nav');
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+            nav.classList.toggle('hamburger-active');
+        });
+    </script>
 </body>
 </html>
