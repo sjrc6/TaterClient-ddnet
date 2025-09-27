@@ -18,8 +18,12 @@
 #include <game/client/ui.h>
 #include <game/localization.h>
 
+#include "SDL_mouse.h"
+
 CScoreboard::CScoreboard()
 {
+	InviteButtonInitialize();
+	
 	OnReset();
 }
 
@@ -41,6 +45,8 @@ void CScoreboard::OnInit()
 
 void CScoreboard::OnReset()
 {
+	InviteButtonReset();
+
 	m_Active = false;
 	m_ServerRecord = -1.0f;
 }
@@ -48,6 +54,12 @@ void CScoreboard::OnReset()
 void CScoreboard::OnRelease()
 {
 	m_Active = false;
+	
+	if(m_MouseModeWasAbsolute)
+	{
+		Input()->MouseModeRelative();
+		m_MouseModeWasAbsolute = false;
+	}
 }
 
 void CScoreboard::OnMessage(int MsgType, void *pRawMsg)
@@ -327,8 +339,12 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	const float PingLength = 55.0f;
 	const float PingOffset = Scoreboard.x + Scoreboard.w - PingLength - 20.0f;
 	const float CountryOffset = PingOffset - CountryLength;
+	
+	const float InviteButtonLength = m_InviteButtonWidth;
+	const float InviteButtonOffset = CountryOffset - InviteButtonLength - 5.0f;
+	
 	const float ClanOffset = NameOffset + NameLength + 5.0f;
-	const float ClanLength = CountryOffset - ClanOffset - 5.0f;
+	const float ClanLength = InviteButtonOffset - ClanOffset - 5.0f;
 
 	// render headlines
 	const float HeadlineFontsize = 22.0f;
@@ -340,6 +356,8 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
 	const char *pClanLabel = Localize("Clan");
 	TextRender()->Text(ClanOffset + (ClanLength - TextRender()->TextWidth(HeadlineFontsize, pClanLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pClanLabel);
+	const char *pInviteLabel = Localize("Invite");
+	TextRender()->Text(InviteButtonOffset + (InviteButtonLength - TextRender()->TextWidth(HeadlineFontsize, pInviteLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pInviteLabel);
 	const char *pPingLabel = Localize("Ping");
 	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
 
@@ -591,6 +609,89 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				Cursor.m_LineWidth = ClanLength;
 				TextRender()->TextEx(&Cursor, ClientData.m_aClan);
 			}
+			
+			if(ShouldShowInviteButton(pInfo->m_ClientId))
+			{
+				CUIRect InviteButton;
+				InviteButton.x = InviteButtonOffset;
+				InviteButton.y = Row.y + (Row.h - m_InviteButtonHeight) / 2.0f;
+				InviteButton.w = InviteButtonLength;
+				InviteButton.h = m_InviteButtonHeight;
+
+				vec2 NativeMousePos = Input()->NativeMousePos();
+				float ScreenWidth = Graphics()->ScreenWidth();
+				float ScreenHeight = Graphics()->ScreenHeight();
+				
+				const float ScoreboardHeight = 400.0f * 3.0f; // Same as other Height variable
+				const float ScoreboardWidth = ScoreboardHeight * Graphics()->ScreenAspect();
+				
+				// Convert from native screen coordinates to scoreboard coordinate system
+				float ScoreboardMouseX = (NativeMousePos.x / ScreenWidth) * ScoreboardWidth;
+				float ScoreboardMouseY = (NativeMousePos.y / ScreenHeight) * ScoreboardHeight;
+				
+				// Manual button collision detection using native coordinates
+				bool ManualHover = (ScoreboardMouseX >= InviteButton.x && ScoreboardMouseX <= InviteButton.x + InviteButton.w &&
+				                   ScoreboardMouseY >= InviteButton.y && ScoreboardMouseY <= InviteButton.y + InviteButton.h);
+
+
+				bool InviteSent = m_aInviteSent[pInfo->m_ClientId];
+				bool GlobalCooldownActive = IsGlobalInviteCooldownActive();
+				bool ServerJoinCooldownActive = IsServerJoinCooldownActive();
+				bool IsDisabled = (GlobalCooldownActive && !InviteSent) || ServerJoinCooldownActive;
+
+				ColorRGBA ButtonColor, BorderColor;
+				float BorderWidth = 0.0f;
+				float ButtonRadius = 3.0f;
+				const char *pButtonText;
+				
+				if(InviteSent)
+				{
+					ButtonColor = ColorRGBA(0.05f, 0.25f, 0.05f, 0.5f);
+					BorderColor = ColorRGBA(0.0f, 0.2f, 0.0f, 0.6f);
+					TextColor = ColorRGBA(0.7f, 0.9f, 0.7f, 1.0f);
+					BorderWidth = 1.0f;
+					pButtonText = "✓";
+				}
+				else
+				{
+					ButtonColor = IsDisabled ? ColorRGBA(0.1f, 0.1f, 0.1f, 0.2f) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.3f);
+					BorderColor = IsDisabled ? ColorRGBA(0.2f, 0.2f, 0.2f, 0.3f) : ColorRGBA(0.3f, 0.3f, 0.3f, 0.5f);
+					TextColor = IsDisabled ? ColorRGBA(0.4f, 0.4f, 0.4f, 0.6f) : ColorRGBA(0.9f, 0.9f, 0.9f, 0.9f);
+					BorderWidth = 1.0f;
+					
+					pButtonText = "+";
+				}
+				
+				CUIRect ButtonRect = InviteButton;
+				
+				ButtonRect.Draw(ButtonColor, IGraphics::CORNER_ALL, ButtonRadius);
+				
+				if(BorderWidth > 0.0f)
+				{
+					CUIRect BorderRect = InviteButton;
+					BorderRect.x -= BorderWidth;
+					BorderRect.y -= BorderWidth;
+					BorderRect.w += BorderWidth * 2.0f;
+					BorderRect.h += BorderWidth * 2.0f;
+
+					BorderRect.Draw(BorderColor, IGraphics::CORNER_ALL, ButtonRadius + BorderWidth);
+					ButtonRect.Draw(ButtonColor, IGraphics::CORNER_ALL, ButtonRadius);
+				}
+				
+				TextRender()->TextColor(TextColor);
+				float TextSize = FontSize * 0.8f;
+
+				Ui()->DoLabel(&ButtonRect, pButtonText, TextSize, TEXTALIGN_MC);
+				
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+				
+				bool ManualClick = ManualHover && Ui()->MouseButtonClicked(0);
+				
+				if(ManualClick && !InviteSent && !IsDisabled)
+				{
+					OnInviteButtonClick(pInfo->m_ClientId, ClientData.m_aName);
+				}
+			}
 
 			// country flag
 			GameClient()->m_CountryFlags.Render(ClientData.m_Country, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f),
@@ -661,7 +762,38 @@ void CScoreboard::OnRender()
 		return;
 
 	if(!IsActive())
+	{
+		if(m_MouseModeWasAbsolute)
+		{
+			Input()->MouseModeRelative();
+			m_MouseModeWasAbsolute = false;
+		}
 		return;
+	}
+
+	bool ShouldEnableMouseMode = !ShouldDisableInteraction();
+	
+	if(!m_MouseModeWasAbsolute && ShouldEnableMouseMode)
+	{
+		Input()->MouseModeAbsolute();
+		Ui()->SetEnabled(true);
+		m_MouseModeWasAbsolute = true;
+		
+		int ScreenWidth = Graphics()->ScreenWidth();
+		int ScreenHeight = Graphics()->ScreenHeight();
+		SDL_WarpMouseInWindow(nullptr, ScreenWidth / 2, ScreenHeight / 2);
+	}
+	else if(m_MouseModeWasAbsolute && !ShouldEnableMouseMode)
+	{
+		Input()->MouseModeRelative();
+		Ui()->SetEnabled(false);
+		m_MouseModeWasAbsolute = false;
+	}
+
+	Ui()->MapScreen();
+	Ui()->Update();
+
+	UpdateTeamStateTracking();
 
 	// if the score board is active, then we should clear the motd message as well
 	if(GameClient()->m_Motd.IsActive())
@@ -864,4 +996,266 @@ const char *CScoreboard::GetTeamName(int Team) const
 		return pClanName;
 	else
 		return nullptr;
+}
+void CScoreboard::InviteButtonInitialize()
+{
+	m_InviteButtonWidth = 50.0f;
+	m_InviteButtonHeight = 20.0f;
+
+	m_LastLocalTeam = TEAM_FLOCK;
+	m_InAutoJoinSequence = false;
+
+	m_MouseModeWasAbsolute = false;
+	
+	std::fill(m_aInviteSent, m_aInviteSent + SERVER_MAX_CLIENTS, false);
+	
+	std::fill(m_aPlayerWasActive, m_aPlayerWasActive + SERVER_MAX_CLIENTS, false);
+	
+	m_GlobalInviteCooldownEnd = 0;
+	m_ServerJoinTime = time_get();
+}
+
+void CScoreboard::InviteButtonReset()
+{
+	m_LastLocalTeam = TEAM_FLOCK;
+	m_InAutoJoinSequence = false;
+
+	if(m_MouseModeWasAbsolute)
+	{
+		Input()->MouseModeRelative();
+		m_MouseModeWasAbsolute = false;
+	}
+
+	std::fill(m_aInviteSent, m_aInviteSent + SERVER_MAX_CLIENTS, false);
+	
+	std::fill(m_aPlayerWasActive, m_aPlayerWasActive + SERVER_MAX_CLIENTS, false);
+	
+	m_GlobalInviteCooldownEnd = 0;
+	m_ServerJoinTime = time_get();
+}
+
+bool CScoreboard::ShouldShowInviteButton(int ClientId) const
+{
+	if(!GameClient()->m_Snap.m_pLocalInfo)
+		return false;
+
+	if(ClientId < 0 || ClientId >= SERVER_MAX_CLIENTS || !GameClient()->m_Snap.m_apPlayerInfos[ClientId])
+		return false;
+	
+	if(!GameClient()->m_aClients[ClientId].m_Active)
+		return false;
+	
+	int TargetTeam = GameClient()->m_Snap.m_apPlayerInfos[ClientId]->m_Team;
+	if(TargetTeam == TEAM_SPECTATORS)
+		return false;
+	
+	int LocalPlayerId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
+	if(LocalPlayerId < 0 || LocalPlayerId >= SERVER_MAX_CLIENTS)
+		return false;
+
+	if(GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
+		return false;
+	
+	if(ShouldDisableInteraction())
+		return false;
+	
+	if(ClientId == LocalPlayerId)
+		return false;
+	
+	int LocalTeam = GameClient()->m_Teams.Team(LocalPlayerId);
+
+	if (LocalTeam == TEAM_SUPER)
+		return false;
+
+	int TargetDDTeam = GameClient()->m_Teams.Team(ClientId);
+	
+	if(LocalTeam == TargetDDTeam && LocalTeam != TEAM_FLOCK)
+		return false;
+
+	return true;
+}
+
+void CScoreboard::OnInviteButtonClick(int ClientId, const char *pPlayerName)
+{
+	if(m_aInviteSent[ClientId])
+		return;
+	
+	if(IsGlobalInviteCooldownActive())
+		return;
+	
+	if(IsServerJoinCooldownActive())
+		return;
+	
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return;
+	
+	if(ClientId < 0 || ClientId >= SERVER_MAX_CLIENTS || !GameClient()->m_Snap.m_apPlayerInfos[ClientId])
+		return;
+		
+	if(!GameClient()->m_aClients[ClientId].m_Active)
+		return;
+	
+	if(!ShouldShowInviteButton(ClientId))
+		return;
+	
+	if(str_comp(pPlayerName, GameClient()->m_aClients[ClientId].m_aName) != 0)
+		return;
+	
+	int LocalPlayerId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
+	if(LocalPlayerId < 0 || LocalPlayerId >= SERVER_MAX_CLIENTS)
+		return;
+
+	int LocalTeam = GameClient()->m_Teams.Team(LocalPlayerId);
+	
+	m_aInviteSent[ClientId] = true;
+	int64_t CooldownDuration = (int64_t)g_Config.m_SvInviteFrequency * time_freq();
+	m_GlobalInviteCooldownEnd = time_get() + CooldownDuration;
+	
+	// Special handling for TEAM_FLOCK players
+	if(LocalTeam == TEAM_FLOCK)
+	{
+		int EmptyTeam = FindNextEmptyTeam();
+		if(EmptyTeam == -1)
+		{
+			m_aInviteSent[ClientId] = false;
+			m_GlobalInviteCooldownEnd = 0;
+			return;
+		}
+		
+		m_InAutoJoinSequence = true;
+		
+		// Join the empty team first
+		char aJoinCommand[64];
+		str_format(aJoinCommand, sizeof(aJoinCommand), "/team %d", EmptyTeam);
+		GameClient()->m_Chat.SendChat(0, aJoinCommand);
+		
+		// Lock the team
+		GameClient()->m_Chat.SendChat(0, "/lock");
+		
+		char aInviteCommand[256];
+		str_format(aInviteCommand, sizeof(aInviteCommand), "/invite %s", pPlayerName);
+		GameClient()->m_Chat.SendChat(0, aInviteCommand);
+	}
+	else
+	{
+		char aInviteCommand[256];
+		str_format(aInviteCommand, sizeof(aInviteCommand), "/invite %s", pPlayerName);
+		GameClient()->m_Chat.SendChat(0, aInviteCommand);
+	}
+}
+
+bool CScoreboard::IsGlobalInviteCooldownActive() const
+{
+	return time_get() < m_GlobalInviteCooldownEnd;
+}
+
+bool CScoreboard::IsServerJoinCooldownActive() const
+{
+	const int64_t ServerJoinCooldownDuration = 1 * time_freq(); // 1 second
+	return time_get() < m_ServerJoinTime + ServerJoinCooldownDuration;
+}
+
+bool CScoreboard::IsLocalPlayerInActiveRun() const
+{
+	return GameClient()->LastRaceTick() >= 0;
+}
+
+bool CScoreboard::IsLocalPlayerFrozen() const
+{
+	int LocalPlayerId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
+	if(LocalPlayerId < 0 || LocalPlayerId >= SERVER_MAX_CLIENTS)
+		return false;
+	
+	const auto &ClientData = GameClient()->m_aClients[LocalPlayerId];
+	return ClientData.m_FreezeEnd > 0;
+}
+
+bool CScoreboard::ShouldDisableInteraction() const
+{
+	return IsLocalPlayerInActiveRun() && !IsLocalPlayerFrozen();
+}
+
+void CScoreboard::UpdateTeamStateTracking()
+{
+	int CurrentLocalTeam = TEAM_FLOCK;
+	int MainPlayerId = GameClient()->m_aLocalIds[0];
+	int DummyPlayerId = GameClient()->m_aLocalIds[1];
+	
+	if(MainPlayerId >= 0 && MainPlayerId < SERVER_MAX_CLIENTS && GameClient()->m_aClients[MainPlayerId].m_Active)
+	{
+		CurrentLocalTeam = GameClient()->m_Teams.Team(MainPlayerId);
+	}
+	else if(DummyPlayerId >= 0 && DummyPlayerId < SERVER_MAX_CLIENTS && GameClient()->m_aClients[DummyPlayerId].m_Active)
+	{
+		CurrentLocalTeam = GameClient()->m_Teams.Team(DummyPlayerId);
+	}
+	
+	for(int i = 0; i < SERVER_MAX_CLIENTS; i++)
+	{
+		bool IsCurrentlyActive = GameClient()->m_Snap.m_apPlayerInfos[i] && GameClient()->m_aClients[i].m_Active;
+		
+		if(m_aPlayerWasActive[i] && !IsCurrentlyActive)
+		{
+			ResetInviteState(i);
+		}
+		else if(!m_aPlayerWasActive[i] && IsCurrentlyActive)
+		{
+			ResetInviteState(i);
+		}
+		
+		m_aPlayerWasActive[i] = IsCurrentlyActive;
+	}
+	
+	if(m_LastLocalTeam != CurrentLocalTeam)
+	{
+		if(!m_InAutoJoinSequence)
+		{
+			ResetInviteState();
+		}
+		else
+		{
+			// Clear the auto-join flag after the team change is processed
+			m_InAutoJoinSequence = false;
+		}
+		m_LastLocalTeam = CurrentLocalTeam;
+	}
+}
+
+void CScoreboard::ResetInviteState(int ClientId)
+{
+	if(ClientId == -1)
+	{
+		std::fill(m_aInviteSent, m_aInviteSent + SERVER_MAX_CLIENTS, false);
+		m_GlobalInviteCooldownEnd = 0;
+	}
+	else if(ClientId >= 0 && ClientId < SERVER_MAX_CLIENTS)
+	{
+		m_aInviteSent[ClientId] = false;
+	}
+}
+
+int CScoreboard::FindNextEmptyTeam() const
+{
+	// Check teams 1-63 for empty slots
+	for(int Team = 1; Team < TEAM_SUPER; Team++)
+	{
+		bool TeamEmpty = true;
+		
+		// Check if any player is in this team
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(GameClient()->m_Snap.m_apPlayerInfos[i] && 
+			   GameClient()->m_aClients[i].m_Active &&
+			   GameClient()->m_Teams.Team(i) == Team)
+			{
+				TeamEmpty = false;
+				break;
+			}
+		}
+		
+		if(TeamEmpty)
+			return Team;
+	}
+	
+	return -1; // No empty team found
 }
