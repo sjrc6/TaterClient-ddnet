@@ -30,6 +30,34 @@ class CScoreboard : public CComponent
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
 	const char *GetTeamName(int Team) const;
 
+	void InviteButtonInitialize();
+	void InviteButtonReset();
+	bool ShouldShowInviteButton(int ClientId) const;
+	void OnInviteButtonClick(int ClientId, const char *pPlayerName);
+	void UpdateTeamStateTracking();
+	void ResetInviteState(int ClientId = -1);
+	bool IsGlobalInviteCooldownActive() const;
+	bool IsServerJoinCooldownActive() const;
+	bool IsLocalPlayerInActiveRun() const;
+	bool IsLocalPlayerFrozen() const;
+	bool ShouldDisableInteraction() const;
+	int FindNextEmptyTeam() const;
+
+	float m_InviteButtonWidth;
+	float m_InviteButtonHeight;
+	bool m_aInviteSent[64];
+	
+	int64_t m_GlobalInviteCooldownEnd;
+
+	int m_LastLocalTeam;
+	bool m_InAutoJoinSequence;
+
+	bool m_aPlayerWasActive[64];
+	
+	int64_t m_ServerJoinTime;
+
+	bool m_MouseModeWasAbsolute;
+
 	bool m_Active;
 	float m_ServerRecord;
 
