@@ -111,7 +111,7 @@ USAGE
     assert(!e);
 
     int64_t match_len = regex_match(tokens, "23.53) ", 0, 0, 0, 0);
-    printf("########### return: %zd\n", match_len);
+    printf("########### return: " PRId64 "\n", match_len);
 
     // with captures:
 
@@ -126,9 +126,9 @@ USAGE
     memset(cap_span, 0xFF, sizeof(cap_span));
 
     int64_t matchlen = regex_match(tokens, "aaaaaabbbabaqa", 0, 5, cap_pos, cap_span);
-    printf("Match length: %zd\n", matchlen);
+    printf("Match length: " PRId64 "\n", matchlen);
     for (int i = 0; i < 5; i++)
-        printf("Capture %d: %zd plus %zd\n", i, cap_pos[i], cap_span[i]);
+        printf("Capture %d: " PRIu64 " plus " PRIu64 "\n", i, cap_pos[i], cap_span[i]);
 
     // for debugging
     print_regex_tokens(tokens);
@@ -144,6 +144,7 @@ LICENSE
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
 REMIMU_CONST_VISIBILITY int REMIMU_FLAG_DOT_NO_NEWLINES = 1;
 
@@ -960,7 +961,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
         } \
         rewind_stack[stack_n++] = s; \
         _P_TEXT_HIGHLIGHTED(); \
-        IF_VERBOSE(printf("-- saving rewind state k %u i %zd rmin %zu rmax %zd (line %d) (depth %d prev %d)\n", s.k, i, range_min, range_max, __LINE__, stack_n, s.prev);) \
+        IF_VERBOSE(printf("-- saving rewind state k %u i " PRIu64 " rmin " PRIu64 " rmax " PRIu64 " (line %d) (depth %d prev %d)\n", s.k, i, range_min, range_max, __LINE__, stack_n, s.prev);) \
     } while (0)
     #define _REWIND_DO_SAVE_DUMMY(K) _REWIND_DO_SAVE_RAW(K, 1)
     #define _REWIND_DO_SAVE(K) _REWIND_DO_SAVE_RAW(K, 0)
@@ -982,7 +983,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
             q_group_stack[tokens[k].mask[0]] = rewind_stack[stack_n].prev; \
         } \
         _P_TEXT_HIGHLIGHTED(); \
-        IF_VERBOSE(printf("-- rewound to k %u i %zd rmin %zu rmax %zd (kind %d prev %d)\n", k, i, range_min, range_max, tokens[k].kind, rewind_stack[stack_n].prev);) \
+        IF_VERBOSE(printf("-- rewound to k %u i " PRIu64 " rmin " PRIu64 " rmax " PRIu64 " (kind %d prev %d)\n", k, i, range_min, range_max, tokens[k].kind, rewind_stack[stack_n].prev);) \
         k -= 1; \
     } while (0)
     // the -= 1 is because of the k++ in the for loop
@@ -1008,7 +1009,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                 return -2;
             }
         }
-        IF_VERBOSE(printf("k: %u\ti: %zu\tl: %zu\tstack_n: %d\n", k, i, limit, stack_n);)
+        IF_VERBOSE(printf("k: " PRIu32 "\ti: " PRIu64 "\tl: %d\tstack_n: %d\n", k, i, limit, (int)stack_n);)
         _P_TEXT_HIGHLIGHTED();
         if (tokens[k].kind == REMIMU_KIND_CARET)
         {
@@ -1056,7 +1057,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
             {
                 if (!just_rewinded)
                 {
-                    IF_VERBOSE(printf("hit OPEN. i is %zd, depth is %d\n", i, stack_n);)
+                    IF_VERBOSE(printf("hit OPEN. i is " PRIu64 ", depth is %d\n", i, stack_n);)
                     // need this to be able to detect and reject zero-size matches
                     //q_group_state[tokens[k].mask[0]] = i;
 
@@ -1078,30 +1079,30 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                 }
                 else
                 {
-                    IF_VERBOSE(printf("rewinded into OPEN. i is %zd, depth is %d\n", i, stack_n);)
+                    IF_VERBOSE(printf("rewinded into OPEN. i is " PRIu64 ", depth is %d\n", i, stack_n);)
                     just_rewinded = 0;
 
                     uint64_t orig_k = k;
 
-                    IF_VERBOSE(printf("--- trying to try another alternation, start k is %d, rmin is %zu\n", k, range_min);)
+                    IF_VERBOSE(printf("--- trying to try another alternation, start k is " PRIu32 ", rmin is " PRIu64 "\n", k, range_min);)
 
                     if (range_min != 0)
                     {
                         IF_VERBOSE(puts("rangemin is not zero. checking...");)
                         k += range_min;
-                        IF_VERBOSE(printf("start kind: %d\n", tokens[k].kind);)
-                        IF_VERBOSE(printf("before start kind: %d\n", tokens[k-1].kind);)
+                        IF_VERBOSE(printf("start kind: %d\n", (int)tokens[k].kind);)
+                        IF_VERBOSE(printf("before start kind: %d\n", (int)tokens[k-1].kind);)
                         if (tokens[k-1].kind == REMIMU_KIND_OR)
                             k += tokens[k-1].pair_offset - 1;
                         else if (tokens[k-1].kind == REMIMU_KIND_OPEN || tokens[k-1].kind == REMIMU_KIND_NCOPEN)
                             k += tokens[k-1].mask[15] - 1;
 
-                        IF_VERBOSE(printf("kamakama %d %d\n", k, tokens[k].kind);)
+                        IF_VERBOSE(printf("kamakama " PRIu32 " %d\n", k, (int)tokens[k].kind);)
 
                         if (tokens[k].kind == REMIMU_KIND_END) // unbalanced parens
                             return -3;
 
-                        IF_VERBOSE(printf("---?!?!   %d, %d\n", k, q_group_state[tokens[k].mask[0]]);)
+                        IF_VERBOSE(printf("---?!?!   " PRIu64 ", " PRIu32 "\n", k, q_group_state[tokens[k].mask[0]]);)
                         if (tokens[k].kind == REMIMU_KIND_CLOSE)
                         {
                             IF_VERBOSE(puts("!!~!~!~~~~!!~~!~   hit CLOSE. rewinding");)
@@ -1128,13 +1129,13 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                         REMIMU_ASSERT(tokens[k].kind == REMIMU_KIND_OR);
                     }
 
-                    IF_VERBOSE(printf("--- FOUND ALTERNATION for paren at k %zd at k %d\n", orig_k, k);)
+                    IF_VERBOSE(printf("--- FOUND ALTERNATION for paren at k " PRIu64 " at k " PRIu32 "\n", orig_k, k);)
 
                     ptrdiff_t k_diff = k - orig_k;
                     range_min = k_diff + 1;
 
                     IF_VERBOSE(puts("(saving in paren after rewinding and looking for next regex token to check)");)
-                    IF_VERBOSE(printf("%zd\n", range_min);)
+                    IF_VERBOSE(printf(PRIu64 "\n", range_min);)
                     _REWIND_DO_SAVE(k - k_diff);
                 }
             }
@@ -1156,14 +1157,14 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                     {
                         uint32_t prev = q_group_stack[tokens[k].mask[0]];
 
-                        IF_VERBOSE(printf("qrqrqrqrqrqrqrq-------      k %d, gs %d, gaz %d, i %zd, tklo %d, rmin %zd, tkhi %d, rmax %zd, prev %d, sn %d\n", k, q_group_state[tokens[k].mask[0]], q_group_accepts_zero[tokens[k].mask[0]], i, tokens[k].count_lo, range_min, tokens[k].count_hi, range_max, prev, stack_n);)
+                        IF_VERBOSE(printf("qrqrqrqrqrqrqrq-------      k " PRIu32 ", gs %d, gaz %d, i " PRIu64 ", tklo %d, rmin " PRIu64 ", tkhi %d, rmax " PRIu64 ", prev " PRIu32 ", sn %d\n", k, q_group_state[tokens[k].mask[0]], (int)q_group_accepts_zero[tokens[k].mask[0]], i, (int)tokens[k].count_lo, range_min, (int)tokens[k].count_hi, range_max, prev, (int)stack_n);)
 
                         range_max = tokens[k].count_hi;
                         range_max -= 1;
                         range_min = q_group_accepts_zero[tokens[k].mask[0]] ? 0 : tokens[k].count_lo;
                         //REMIMU_ASSERT(q_group_state[tokens[k + tokens[k].pair_offset].mask[0]] <= i);
                         //if (prev) REMIMU_ASSERT(rewind_stack[prev].i <= i);
-                        IF_VERBOSE(printf("qzqzqzqzqzqzqzq-------      rmin %zd, rmax %zd\n", range_min, range_max);)
+                        IF_VERBOSE(printf("qzqzqzqzqzqzqzq-------      rmin " PRIu64 ", rmax " PRIu64 "\n", range_min, range_max);)
 
                         // minimum requirement not yet met
                         if (q_group_state[tokens[k].mask[0]] + 1 < range_min)
@@ -1179,7 +1180,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                         // maximum allowance exceeded
                         else if (tokens[k].count_hi != 0 && q_group_state[tokens[k].mask[0]] + 1 > range_max)
                         {
-                            IF_VERBOSE(printf("hit maximum allowed instances of a quantified group %d %zd\n", q_group_state[tokens[k].mask[0]], range_max);)
+                            IF_VERBOSE(printf("hit maximum allowed instances of a quantified group " PRIu32 " " PRIu64 "\n", q_group_state[tokens[k].mask[0]], range_max);)
                             range_max -= 1;
                             _REWIND_OR_ABORT();
                             continue;
@@ -1202,8 +1203,8 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                         // reject zero-length matches
                         if ((force_zero || (prev != 0 && rewind_stack[prev].i == i))) //  && q_group_state[tokens[k].mask[0]] > 0
                         {
-                            IF_VERBOSE(printf("rejecting zero-length match..... %d %zd %zd\n", force_zero, rewind_stack[prev].i, i);)
-                            IF_VERBOSE(printf("%d (k: %d)\n", q_group_state[tokens[k].mask[0]], k);)
+                            IF_VERBOSE(printf("rejecting zero-length match..... %d " PRIu64 " " PRIu64 "\n", (int)force_zero, rewind_stack[prev].i, i);)
+                            IF_VERBOSE(printf(PRIu32 " (k: " PRIu64 ")\n", q_group_state[tokens[k].mask[0]], k);)
 
                             q_group_accepts_zero[tokens[k].mask[0]] = 1;
                             _REWIND_OR_ABORT();
@@ -1212,9 +1213,9 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                         }
                         else if (tokens[k].mode & REMIMU_MODE_LAZY) // lazy
                         {
-                            IF_VERBOSE(printf("nidnfasidfnidfndifn-------      %d, %d, %zd\n", q_group_state[tokens[k].mask[0]], tokens[k].count_lo, range_min);)
+                            IF_VERBOSE(printf("nidnfasidfnidfndifn-------      " PRIu32 ", %d, " PRIu64 "\n", q_group_state[tokens[k].mask[0]], (int)tokens[k].count_lo, range_min);)
                             if (prev)
-                                IF_VERBOSE(printf("lazy doesn't think it's zero-length. prev i %zd vs i %zd (depth %d)\n", rewind_stack[prev].i, i, stack_n);)
+                                IF_VERBOSE(printf("lazy doesn't think it's zero-length. prev i " PRIu64 " vs i " PRIu64 " (depth %d)\n", rewind_stack[prev].i, i, (int)stack_n);)
                             // continue on to past the group; group retry is in rewind state
                             q_group_state[tokens[k].mask[0]] += 1;
                             _REWIND_DO_SAVE(k);
@@ -1271,11 +1272,11 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                         else
                         {
                             // greedy. if we're going to go outside the acceptable range, rewind
-                            IF_VERBOSE(printf("kufukufu %d %zd\n", tokens[k].count_lo, range_min);)
+                            IF_VERBOSE(printf("kufukufu %d " PRIu64 "\n", (int)tokens[k].count_lo, range_min);)
                             //uint64_t old_i = i;
                             if (q_group_state[tokens[k].mask[0]] < range_min && !q_group_accepts_zero[tokens[k].mask[0]])
                             {
-                                IF_VERBOSE(printf("rewinding from greedy group because we're going to go out of range (%d vs %zd)\n", q_group_state[tokens[k].mask[0]], range_min);)
+                                IF_VERBOSE(printf("rewinding from greedy group because we're going to go out of range (" PRIu32 " vs " PRIu64 ")\n", q_group_state[tokens[k].mask[0]], range_min);)
                                 //i = old_i;
                                 _REWIND_OR_ABORT();
                             }
@@ -1339,7 +1340,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                             n += 1;
                         }
                         range_max = n;
-                        IF_VERBOSE(printf("set rmin to %zd and rmax to %zd on entry into normal greedy token with k %d\n", range_min, range_max, k);)
+                        IF_VERBOSE(printf("set rmin to " PRIu64 " and rmax to " PRIu64 " on entry into normal greedy token with k " PRIu32 "\n", range_min, range_max, k);)
                         if (!(tokens[k].mode & REMIMU_MODE_POSSESSIVE))
                             _REWIND_DO_SAVE(k);
                     }
@@ -1369,7 +1370,7 @@ REMIMU_FUNC_VISIBILITY int64_t regex_match(const RegexToken * tokens, const char
                     }
                     else
                     {
-                        //IF_VERBOSE(printf("comparing rmin %zd and rmax %zd token with k %d\n", range_min, range_max, k);)
+                        //IF_VERBOSE(printf("comparing rmin " PRIu64 " and rmax " PRIu64 " token with k " PRIu32 "\n", range_min, range_max, k);)
                         if (range_max > range_min)
                         {
                             IF_VERBOSE(printf("greedy normal going back (k: %d)\n", k);)
