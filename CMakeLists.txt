@@ -26,37 +26,37 @@ endif()
 
 # re2
 
-find_package(PkgConfig QUIET)
-if(PkgConfig_FOUND)
-  pkg_check_modules(RE2 QUIET re2)
-else()
-  find_package(re2 REQUIRED)
-  message(STATUS "PkgConfig not found")
-  message(STATUS "    RE2 will probably be built even if installed")
+if(DEFINED ENV{GITHUB_ACTIONS})
+  message(STATUS "Detected GitHub Actions CI, installing re2")
+  message(STATUS "System Name: ${CMAKE_HOST_SYSTEM_NAME}")
+  if(MINGW OR MSYS)
+    execute_process(COMMAND pacman -Sy --noconfirm mingw-w64-x86_64-re2)
+  elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+    execute_process(COMMAND sudo apt-get install -y libre2-dev)
+  elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+    execute_process(COMMAND brew install re2)
+  elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(VCPKG_DIR "${CMAKE_BINARY_DIR}/vcpkg")
+    set(ENV{VCPKG_ROOT} "${VCPKG_DIR}")
+    execute_process(COMMAND git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_DIR}" RESULT_VARIABLE GIT_CLONE_RESULT)
+    if(NOT GIT_CLONE_RESULT EQUAL 0)
+      message(FATAL_ERROR "Failed to clone vcpkg")
+    endif()
+    execute_process(COMMAND "${VCPKG_DIR}/bootstrap-vcpkg.bat" WORKING_DIRECTORY "${VCPKG_DIR}" RESULT_VARIABLE BOOTSTRAP_RESULT)
+    if(NOT BOOTSTRAP_RESULT EQUAL 0)
+      message(FATAL_ERROR "Failed to bootstrap vcpkg")
+    endif()
+    set(ENV{VCPKG_BUILD_TYPE} "release")
+    execute_process(COMMAND "${VCPKG_DIR}/vcpkg.exe" install re2 WORKING_DIRECTORY "${VCPKG_DIR}" RESULT_VARIABLE VCPKG_INSTALL_RESULT)
+    if(NOT VCPKG_INSTALL_RESULT EQUAL 0)
+      message(FATAL_ERROR "Failed to install re2 via vcpkg")
+    endif()
+  else()
+    message(FATAL_ERROR "Couldn't install re2")
+  endif()
 endif()
-if (NOT RE2_FOUND)
-  message(STATUS "RE2 not found")
-  message(STATUS "    building RE2 2025-08-12 and absl 2025-08-14.1 instead")
-  message(STATUS "    you should install RE2 for a faster build")
-  set(ABSL_ENABLE_INSTALL FALSE CACHE BOOL "" FORCE)
-  set(RE2_INSTALL OFF CACHE BOOL "" FORCE)
-  include(FetchContent)
-  FetchContent_Declare(
-    absl
-    GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-    GIT_TAG 20250814.1
-    GIT_SHALLOW TRUE
-  )
-  FetchContent_MakeAvailable(absl)
-  FetchContent_Declare(
-    re2
-    GIT_REPOSITORY https://github.com/google/re2.git
-    GIT_TAG 2025-08-12
-    GIT_SHALLOW TRUE
-  )
-  FetchContent_MakeAvailable(re2)
-  set(RE2_LIBRARIES, re2::re2)
-endif()
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(RE2 REQUIRED re2)
 
 # data_version.txt
 
@@ -2863,6 +2863,7 @@ if(CLIENT)
   endif()
 
   target_include_directories(game-client SYSTEM PRIVATE
+    ${RE2_INCLUDE_DIRS} # TClient
     ${FREETYPE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}

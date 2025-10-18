@@ -52,8 +52,7 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update || true
-        brew install pkg-config ninja molten-vk vulkan-headers glslang spirv-tools glew googletest libpng molten-vk opusfile wavpack x264 || true
-        brew upgrade freetype
+        brew install molten-vk vulkan-headers glslang spirv-tools glew googletest molten-vk opusfile wavpack x264 || true
         pip3 install --break-system-packages dmgbuild
         echo /Library/Frameworks/Python.framework/Versions/3.12/bin >> $GITHUB_PATH
         sudo rm -rf /Library/Developer/CommandLineTools
