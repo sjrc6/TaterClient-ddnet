@@ -61,6 +61,9 @@ if(DEFINED ENV{GITHUB_ACTIONS})
 endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(RE2 REQUIRED re2)
+message(STATUS "RE2_INCLUDE_DIRS = ${RE2_INCLUDE_DIRS}")
+message(STATUS "RE2_LIBRARY_DIRS = ${RE2_LIBRARY_DIRS}")
+message(STATUS "RE2_LIBRARIES = ${RE2_LIBRARIES}")
 
 # data_version.txt
 
