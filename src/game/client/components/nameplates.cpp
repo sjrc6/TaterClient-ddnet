@@ -14,6 +14,8 @@
 #include <memory>
 #include <vector>
 
+#include <engine/external/ddnet-custom-clients/custom_clients_ids.h> //TClient
+
 static constexpr float DEFAULT_PADDING = 5.0f;
 
 // Part Types
@@ -454,6 +456,46 @@ public:
 
 // ***** TClient Parts *****
 
+class CNamePlatePartCustomClient : public CNamePlatePartSprite
+{
+public:
+	void Update(CGameClient &This, const CNamePlateData &Data) override
+	{
+		if(!g_Config.m_TcShowClientType || Data.m_ClientId == This.m_Snap.m_LocalClientId)
+		{
+			m_Visible = false;
+			return;
+		}
+
+		if(This.m_TClient.m_aClientData[Data.m_ClientId].m_CustomClient == CUSTOM_CLIENT_ID_KAIZO_NETWORK)
+		{
+			m_Texture = g_pData->m_aImages[IMAGE_KZ_KAIZOICON].m_Id;
+			m_Sprite = SPRITE_KZ_KAIZOICON;
+			m_Visible = true;
+		}
+		else if(This.m_TClient.m_aClientData[Data.m_ClientId].m_CustomClient == CUSTOM_CLIENT_ID_TATER)
+		{
+			m_Texture = g_pData->m_aImages[IMAGE_TC_TATERICON].m_Id;
+			m_Sprite = SPRITE_TC_TATERICON;
+			m_Visible = true;
+		}
+		else
+		{
+			m_Visible = false;
+		}
+		m_Color.a = Data.m_Color.a;
+	}
+
+	CNamePlatePartCustomClient(CGameClient &This) :
+		CNamePlatePartSprite(This)
+		{
+			m_Texture = g_pData->m_aImages[IMAGE_KZ_KAIZOICON].m_Id;
+			m_Padding = vec2(0.0f, 0.0f);
+			m_Sprite = SPRITE_KZ_KAIZOICON;
+			m_Size = vec2(20 + DEFAULT_PADDING, 20 + DEFAULT_PADDING);
+		}
+};
+
 class CNamePlatePartCountry : public CNamePlatePart
 {
 protected:
@@ -678,6 +720,7 @@ private:
 
 		AddPart<CNamePlatePartHookStrongWeak>(This);
 		AddPart<CNamePlatePartHookStrongWeakId>(This);
+		AddPart<CNamePlatePartCustomClient>(This); // TClient
 		AddPart<CNamePlatePartNewLine>(This);
 
 		AddPart<CNamePlatePartDirection>(This, DIRECTION_LEFT);

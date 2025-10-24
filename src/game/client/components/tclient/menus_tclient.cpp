@@ -700,6 +700,16 @@ void CMenus::RenderSettingsTClientSettngs(CUIRect MainView)
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	// TODO: add preview
 
+	// ***** Custom Clients ***** //
+	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Custom Clients"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcSendClientType, TCLocalize("Send custom client flag"), &g_Config.m_TcSendClientType, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcShowClientType, TCLocalize("Show others custom clients as a icon above them"), &g_Config.m_TcShowClientType, &Column, LineSize);
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
 	// ***** RightView ***** //
 	LeftView = Column;
 	Column = RightView;

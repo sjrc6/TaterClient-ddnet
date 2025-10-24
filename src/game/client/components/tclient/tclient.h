@@ -66,6 +66,24 @@ public:
 	bool InfoTaskDone() { return m_pTClientInfoTask && m_pTClientInfoTask->State() == EHttpState::DONE; }
 	bool m_FetchedTClientInfo = false;
 	char m_aVersionStr[10] = "0";
+
+	void OnUpdate() override;
+	void OnReset() override;
+
+	class CTCClientData
+	{
+		public:
+		int m_CustomClient = '\0';
+		bool m_SentCustomClient = false;
+
+		void Reset();
+
+	} m_aClientData[MAX_CLIENTS];
+
+	int ReplaceCountryFlagWithCustomClientId(int Country);
+	bool IsCustomClientId(int Country);
+	int m_SendingCustomClientTicks = -1;
+	int HandleClientCountry(int Country, int ClientId);
 };
 
 #endif

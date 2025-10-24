@@ -1,10 +1,13 @@
 ﻿#include <base/log.h>
 
+#include <engine/shared/protocol.h>
+
 #include "tclient.h"
 
 #include "data_version.h"
 
 #include <engine/client/enums.h>
+#include <engine/external/ddnet-custom-clients/custom_clients_ids.h>
 #include <engine/external/tinyexpr.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
@@ -846,4 +849,107 @@ void CTClient::RenderCtfFlag(vec2 Pos, float Alpha)
 	Graphics()->QuadsSetRotation(0.0f);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
 	Graphics()->RenderQuadContainerAsSprite(GameClient()->m_Items.m_ItemsQuadContainerIndex, QuadOffset, Pos.x, Pos.y - Size * 0.75f);
+}
+
+void CTClient::OnUpdate()
+{
+	bool MustSendCustomClient = false;
+
+	for(auto &Client : GameClient()->m_aClients)
+	{
+		if(Client.m_Active)
+		{
+			if(Client.ClientId() == GameClient()->m_Snap.m_LocalClientId || Client.ClientId() == GameClient()->GetPredictedDummyId())
+			{
+				m_aClientData[Client.ClientId()].m_CustomClient = CUSTOM_CLIENT_ID_TATER; //force tater client for us
+			}
+
+			if(!m_aClientData[Client.ClientId()].m_SentCustomClient)
+			{
+				MustSendCustomClient = true;
+				m_aClientData[Client.ClientId()].m_SentCustomClient = true;
+			}
+		}
+		else
+		{
+			m_aClientData[Client.ClientId()].m_SentCustomClient = false;
+		}
+	}
+
+	if(MustSendCustomClient)
+	{
+		m_SendingCustomClientTicks = 25;
+	}
+
+	switch(m_SendingCustomClientTicks)
+	{
+	case 25:
+		GameClient()->SendInfo(false);
+		GameClient()->SendDummyInfo(false);
+		m_SendingCustomClientTicks = 24;
+		break;
+	case 0:
+		GameClient()->SendInfo(false);
+		GameClient()->SendDummyInfo(false);
+		m_SendingCustomClientTicks = -1;
+		break;
+	default:
+		if(m_SendingCustomClientTicks > 0)
+			m_SendingCustomClientTicks--;
+		break;
+	}
+}
+
+void CTClient::OnReset()
+{
+	for(auto &ClientData : m_aClientData)
+	{
+		ClientData.Reset();
+	}
+
+	m_SendingCustomClientTicks = 25;
+}
+
+void CTClient::CTCClientData::Reset()
+{
+	m_CustomClient = 0;
+	m_SentCustomClient = false;
+}
+
+// function originally from Kaizo Network by +KZ, credit if used
+int CTClient::ReplaceCountryFlagWithCustomClientId(int Country)
+{
+	if(!g_Config.m_TcSendClientType)
+		return Country;
+
+	if(m_SendingCustomClientTicks <= 1) //dont send custom flag
+		return Country;
+
+	//if some random day amount of flags conflicts with invalid flag, just send normal country
+	if(GameClient()->m_CountryFlags.Num() >= MINIMUM_CUSTOM_CLIENT_ID)
+	{
+		return Country;
+	}
+
+	return CUSTOM_CLIENT_ID_TATER;
+}
+
+// function originally from Kaizo Network by +KZ, credit if used
+bool CTClient::IsCustomClientId(int Country)
+{
+	return (size_t)Country > GameClient()->m_CountryFlags.Num();
+}
+
+// code originally from Kaizo Network by +KZ, credit if used
+int CTClient::HandleClientCountry(int Country, int ClientId)
+{
+	if(IsCustomClientId(Country)) //if it is a custom client id, set custom client id and keep country
+	{
+		m_aClientData[ClientId].m_CustomClient = Country;
+		return GameClient()->m_aClients[ClientId].m_Country;
+	}
+	else //otherwise, set country
+	{
+		return Country;
+	}
 }

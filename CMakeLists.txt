@@ -1948,6 +1948,9 @@ set(EXPECTED_DATA
   skins7/x_ninja.json
   skins7/xmas_hat.png
   strong_weak.png
+  tclient/clienticons/kaizoicon.png
+  tclient/clienticons/license.txt
+  tclient/clienticons/tatericon.png
   tclient/fonts/Cabin-Regular.ttf
   tclient/fonts/FreeSansBold.ttf
   tclient/fonts/GoogleSans-Regular.ttf

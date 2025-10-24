@@ -263,3 +263,7 @@ MACRO_CONFIG_INT(TcExecuteOnJoinDelay, tc_execute_on_join_delay, 2, 7, 50000, CF
 
 // Custom Communities
 MACRO_CONFIG_STR(TcCustomCommunitiesUrl, tc_custom_communities_url, 256, "https://raw.githubusercontent.com/SollyBunny/ddnet-custom-communities/refs/heads/main/custom-communities-ddnet-info.json", CFGFLAG_CLIENT | CFGFLAG_SAVE, "URL to fetch custom communities from (must be https), empty to disable")
+
+// Client identify (from Kaizo Network)
+MACRO_CONFIG_INT(TcSendClientType, tc_send_client_type, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Let know other clients that we are TClient")
+MACRO_CONFIG_INT(TcShowClientType, tc_show_client_type, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Try to identify and show other players clients as icons")

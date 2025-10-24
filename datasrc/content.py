@@ -456,6 +456,22 @@ container.sprites.Add(Sprite("part_sparkle", set_extras, 2,0,2,2))
 container.sprites.Add(Sprite("part_pulley", set_extras, 4,0,1,1))
 container.sprites.Add(Sprite("part_hectagon", set_extras, 6,0,2,2))
 
+# TClient Client Icons
+
+# Kaizo Network
+kz_image_kaizoicon= Image("kz_kaizoicon", "tclient/clienticons/kaizoicon.png")
+container.images.Add(kz_image_kaizoicon)
+set_kz_kaizoicon = SpriteSet("kz_kaizoicon", kz_image_kaizoicon, 1, 1)
+container.spritesets.Add(set_kz_kaizoicon)
+container.sprites.Add(Sprite("kz_kaizoicon", set_kz_kaizoicon, 0, 0, 1, 1))
+
+# TClient
+tc_image_tatericon= Image("tc_tatericon", "tclient/clienticons/tatericon.png")
+container.images.Add(tc_image_tatericon)
+set_tc_tatericon = SpriteSet("tc_tatericon", tc_image_tatericon, 1, 1)
+container.spritesets.Add(set_tc_tatericon)
+container.sprites.Add(Sprite("tc_tatericon", set_tc_tatericon, 0, 0, 1, 1))
+
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))
 anim.back_foot.frames.Add(AnimKeyframe(0, 0, 10, 0))

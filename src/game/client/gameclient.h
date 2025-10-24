@@ -993,6 +993,7 @@ public:
 	bool CheckNewInput() override;
 	std::optional<CServerInfo> m_ConnectServerInfo = std::nullopt;
 	void SetConnectInfo(const NETADDR *pAddress) override;
+	int GetPredictedDummyId() { return m_PredictedDummyId; }
 };
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL);

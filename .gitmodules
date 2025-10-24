@@ -2,3 +2,6 @@
 	path = ddnet-libs
 	url = https://github.com/ddnet/ddnet-libs
 	shallow = true
+[submodule "src/engine/external/ddnet-custom-clients"]
+	path = src/engine/external/ddnet-custom-clients
+	url = https://github.com/M0REKZ/ddnet-custom-clients.git
